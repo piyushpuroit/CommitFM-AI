@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-slate-950 text-slate-100 antialiased;
+    font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse-slow 2.2s cubic-bezier(.4,0,.6,1) infinite;
+  }
+
+  @keyframes pulse-slow {
+    0% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-6%); opacity: .85; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+}
