@@ -94,7 +94,7 @@ const DashboardPage = () => {
     };
 
     return (
-        <MainLayout showHero={false} showAnalytics={false} showFeatures={false}>
+        <MainLayout>
             <div className="space-y-8 text-left">
                 
                 {/* SECTION A: Repository Context */}

@@ -56,7 +56,7 @@ const RepositoryDetails = ({ repositoryId }) => {
 
     if (loading) {
         return (
-            <MainLayout showHero={false} showAnalytics={false} showFeatures={false}>
+            <MainLayout>
                 <div className="py-20 text-center text-xs text-brand-muted">
                     <svg className="animate-spin w-5 h-5 mx-auto mb-2 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.306 9H18" />
@@ -69,7 +69,7 @@ const RepositoryDetails = ({ repositoryId }) => {
 
     if (error || !repository) {
         return (
-            <MainLayout showHero={false} showAnalytics={false} showFeatures={false}>
+            <MainLayout>
                 <div className="py-20 text-center text-xs text-red-400">
                     <p className="font-semibold">{error || "Repository data missing"}</p>
                 </div>
@@ -81,7 +81,7 @@ const RepositoryDetails = ({ repositoryId }) => {
     const primaryLang = Object.keys(repository.languages)[0] || "Unknown";
 
     return (
-        <MainLayout showHero={false} showAnalytics={false} showFeatures={false}>
+        <MainLayout>
             <div className="space-y-6 text-left">
                 {/* 1. Overview Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

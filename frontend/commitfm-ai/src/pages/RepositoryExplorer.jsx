@@ -76,7 +76,7 @@ const RepositoryExplorer = () => {
     );
 
     return (
-        <MainLayout showHero={false} showAnalytics={false} showFeatures={false}>
+        <MainLayout>
             <div className="space-y-6 text-left">
                 {/* Header Controls */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-premium bg-brand-surface border border-white/5">
