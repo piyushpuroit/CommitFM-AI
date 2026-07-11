@@ -3,48 +3,39 @@ import HeroSection from "../components/HeroSection";
 import AnalyticsPreview from "../components/AnalyticsPreview";
 import FeatureGrid from "../components/FeatureGrid";
 import Footer from "../components/Footer";
-import OnboardingFlow from "../components/onboarding/OnboardingFlow";
 
-const MainLayout = ({ children, onStartOnboarding, onboardingOpen, onCloseOnboarding }) => {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="max-w-7xl mx-auto">
+const MainLayout = ({ children, showHero = true, showAnalytics = true, showFeatures = true }) => {
+    return (
+    <div className="min-h-screen bg-indigo-950 text-slate-100">
+      <div className="w-full">
         <Navbar />
 
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 gap-4">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-300 to-slate-400">CommitFM AI</h1>
-            <p className="text-zinc-400">Turn your git history into insightful developer audio.</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <button
-              onClick={onStartOnboarding}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg font-medium text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 whitespace-nowrap"
-            >
-              Start Onboarding
-            </button>
-          </div>
-        </header>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-5 lg:py-7">
+          {/* Header with branding */}
+          <header className="mb-4 sm:mb-5">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-1.5 select-none">
+                CommitFM <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-brand-primary/10 border border-brand-primary/20 text-brand-primary font-bold">AI</span>
+              </h1>
+              <p className="text-xs text-brand-muted font-medium">The AI Developer Intelligence Platform</p>
+            </div>
+          </header>
 
-        <HeroSection onStartOnboarding={onStartOnboarding} />
-        <AnalyticsPreview />
-        <FeatureGrid />
+          {/* Conditional Sections */}
+          {showHero && <HeroSection />}
+          {showAnalytics && <AnalyticsPreview />}
+          {showFeatures && <FeatureGrid />}
 
-        {children}
+          {/* Main Content */}
+          {children}
 
-        <section id="analytics" className="mb-12">
-          <div className="rounded-xl p-6 bg-slate-800 border border-white/6">
-            <h4 className="text-lg font-semibold mb-2">Analytics</h4>
-            <p className="text-zinc-400">Overview metrics and charts will appear here. (Placeholder)</p>
-          </div>
-        </section>
 
-        <Footer />
 
-        <OnboardingFlow isOpen={onboardingOpen} onClose={onCloseOnboarding} />
+          <Footer />
+        </div>
       </div>
     </div>
-  );
+    );
 };
 
 export default MainLayout;

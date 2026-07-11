@@ -1,28 +1,25 @@
-import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import { RepositoryProvider } from "./contexts/RepositoryContext";
+
 import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import DeveloperDNAPage from "./pages/DeveloperDNAPage";
+import RepositoryExplorer from "./pages/RepositoryExplorer";
+import RepositoryDetails from "./pages/RepositoryDetails";
 
 function App() {
-  const [commits, setCommits] = useState([]);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
-
-  const fetchCommits = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/api/commits");
-      const data = await response.json();
-      setCommits(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
-    <HomePage
-      commits={commits}
-      onFetchCommits={fetchCommits}
-      onStartOnboarding={() => setOnboardingOpen(true)}
-      onboardingOpen={onboardingOpen}
-      onCloseOnboarding={() => setOnboardingOpen(false)}
-    />
+    <RepositoryProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/connect" element={<OnboardingPage />} />
+        <Route path="/dna" element={<DeveloperDNAPage />} />
+        <Route path="/repositories" element={<RepositoryExplorer />} />
+        <Route path="/repositories/:id" element={<RepositoryDetails />} />
+      </Routes>
+    </RepositoryProvider>
   );
 }
 
