@@ -3,18 +3,13 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { githubService } from "../services/githubService";
+import LoadingSkeleton from "../components/common/LoadingSkeleton";
+import EmptyState from "../components/common/EmptyState";
 
 // Helper for language color dots
 const getLanguageColor = (lang) => {
-    switch (lang?.toLowerCase()) {
-        case "javascript": return "bg-yellow-500";
-        case "typescript": return "bg-blue-500";
-        case "go": return "bg-cyan-500";
-        case "python": return "bg-green-500";
-        case "html": return "bg-orange-500";
-        case "css": return "bg-purple-500";
-        default: return "bg-slate-400";
-    }
+    const colors = { javascript: "bg-yellow-500", typescript: "bg-blue-500", go: "bg-cyan-500", python: "bg-green-500", html: "bg-orange-500", css: "bg-purple-500" };
+    return colors[lang?.toLowerCase()] || "bg-slate-400";
 };
 
 const RepositoryExplorer = () => {
@@ -60,12 +55,7 @@ const RepositoryExplorer = () => {
         if (sortBy === "stars") return b.starsCount - a.starsCount;
         if (sortBy === "forks") return b.forksCount - a.forksCount;
         if (sortBy === "name") return a.name.localeCompare(b.name);
-        if (sortBy === "updated") {
-            const dateA = a.lastSyncedAt ? new Date(a.lastSyncedAt) : new Date(0);
-            const dateB = b.lastSyncedAt ? new Date(b.lastSyncedAt) : new Date(0);
-            return dateB - dateA;
-        }
-        return 0;
+        return (b.lastSyncedAt ? new Date(b.lastSyncedAt) : 0) - (a.lastSyncedAt ? new Date(a.lastSyncedAt) : 0);
     });
 
     // Collect all available unique primary languages from mock data
@@ -137,12 +127,7 @@ const RepositoryExplorer = () => {
 
                 {/* Repository Cards List */}
                 {loading ? (
-                    <div className="py-20 text-center text-xs text-brand-muted">
-                        <svg className="animate-spin w-5 h-5 mx-auto mb-2 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.306 9H18" />
-                        </svg>
-                        Loading repositories...
-                    </div>
+                    <LoadingSkeleton count={4} />
                 ) : (
                     <motion.div
                         className="grid grid-cols-1 gap-3"
@@ -240,9 +225,10 @@ const RepositoryExplorer = () => {
                         })}
 
                         {sortedRepositories.length === 0 && (
-                            <div className="py-20 text-center text-xs text-brand-muted">
-                                No repositories found matching the search filters.
-                            </div>
+                            <EmptyState 
+                                title="No repositories found" 
+                                description="Try modifying your search query or language filter." 
+                            />
                         )}
                     </motion.div>
                 )}
