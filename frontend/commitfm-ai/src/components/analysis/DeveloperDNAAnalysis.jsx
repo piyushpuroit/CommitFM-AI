@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import SectionHeader from "../common/SectionHeader";
 
 const mockDNARecords = {
   archetype: "System Architect",
@@ -53,17 +54,17 @@ const DeveloperDNAAnalysis = () => {
 
   return (
     <div className="space-y-6 text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-premium bg-brand-surface border border-white/5">
-        <div>
-          <span className="text-[10px] text-brand-accent font-bold uppercase tracking-widest">AI Behavioral Profiling</span>
-          <h2 className="text-lg font-bold text-white tracking-tight">Developer DNA Profile</h2>
-          <p className="text-xs text-brand-muted">Deconstructed analysis of commit patterns and engineering tendencies</p>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-xs font-semibold select-none self-start sm:self-auto">
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
-          Profile Confidence: {data.confidenceScore}%
-        </div>
-      </div>
+      <SectionHeader 
+        badge="AI Behavioral Profiling"
+        title="Developer DNA Profile"
+        subtitle="Deconstructed analysis of commit patterns and engineering tendencies"
+        rightElement={
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-xs font-semibold select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+            Profile Confidence: {data.confidenceScore}%
+          </div>
+        }
+      />
 
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-12 gap-5"

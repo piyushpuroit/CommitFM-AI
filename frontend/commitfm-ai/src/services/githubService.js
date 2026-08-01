@@ -4,38 +4,6 @@ import { PullRequest } from "../models/PullRequest";
 import { Contributor } from "../models/Contributor";
 
 // Mock Database representing repositories, commits, PRs, and contributors
-const mockRepositories = [
-    {
-        id: 101,
-        name: "commitfm-ai",
-        fullName: "piyushpuroit/commitfm-ai",
-        description: "AI-powered developer intelligence cockpit and codebase diagnostic suite.",
-        htmlUrl: "https://github.com/piyushpuroit/commitfm-ai",
-        defaultBranch: "main",
-        languages: { JavaScript: 45000, TypeScript: 120000, CSS: 15000, HTML: 5000 },
-        starsCount: 342,
-        forksCount: 48,
-        openIssuesCount: 4,
-        isPrivate: false,
-        lastSyncedAt: new Date().toISOString(),
-        owner: { login: "piyushpuroit", avatar_url: "https://github.com/piyushpuroit.png" }
-    },
-    {
-        id: 102,
-        name: "telemetry-engine",
-        fullName: "piyushpuroit/telemetry-engine",
-        description: "High-throughput ingestion daemon for parsing git histories and commit footprints.",
-        htmlUrl: "https://github.com/piyushpuroit/telemetry-engine",
-        defaultBranch: "develop",
-        languages: { Go: 180000, ProtocolBuffers: 8000 },
-        starsCount: 89,
-        forksCount: 12,
-        openIssuesCount: 2,
-        isPrivate: true,
-        lastSyncedAt: new Date(Date.now() - 86400000).toISOString(),
-        owner: { login: "piyushpuroit", avatar_url: "https://github.com/piyushpuroit.png" }
-    }
-];
 
 const mockCommits = {
     101: [
@@ -139,7 +107,9 @@ export const githubService = {
      * @returns {Promise<GitHubRepository[]>}
      */
     async getRepositories() {
-        const response = await fetch("http://localhost:8080/api/github/repositories");
+        const response = await fetch("http://localhost:8080/api/github/repositories", {
+            credentials: "include"
+        });
         if (!response.ok) {
             throw new Error(`Failed to fetch repositories: ${response.statusText}`);
         }
@@ -169,6 +139,23 @@ export const githubService = {
      */
     async getRepositoryDetails(repositoryId) {
         return this.getRepository(repositoryId);
+    },
+
+    /**
+     * Retrieves detailed repository statistics by owner and name path.
+     * @param {string} owner - Repository owner login.
+     * @param {string} repo - Repository name.
+     * @returns {Promise<GitHubRepository>}
+     */
+    async getRepositoryDetailsByPath(owner, repo) {
+        const response = await fetch(`http://localhost:8080/api/github/repositories/${owner}/${repo}`, {
+            credentials: "include"
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch repository details: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return new GitHubRepository(data);
     },
 
     /**

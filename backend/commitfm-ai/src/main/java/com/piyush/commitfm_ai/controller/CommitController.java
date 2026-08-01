@@ -15,7 +15,7 @@ import com.piyush.commitfm_ai.service.AnalysisEngine;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CommitController {
 
     private final CommitService commitService;

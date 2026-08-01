@@ -5,6 +5,8 @@ import MainLayout from "../layouts/MainLayout";
 import { githubService } from "../services/githubService";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import EmptyState from "../components/common/EmptyState";
+import ErrorState from "../components/common/ErrorState";
+import { useRepository } from "../contexts/RepositoryContext";
 
 // Helper for language color dots
 const getLanguageColor = (lang) => {
@@ -13,24 +15,30 @@ const getLanguageColor = (lang) => {
 };
 
 const RepositoryExplorer = () => {
+    const { user, setSelectedRepository } = useRepository();
     const [repositories, setRepositories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState("all");
     const [selectedType, setSelectedType] = useState("all");
     const [sortBy, setSortBy] = useState("stars");
 
+    const fetchRepos = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await githubService.getRepositories();
+            setRepositories(data);
+        } catch (err) {
+            console.error("Failed to load repositories:", err);
+            setError(err.message || "Failed to load repositories");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchRepos = async () => {
-            try {
-                const data = await githubService.getRepositories();
-                setRepositories(data);
-            } catch (err) {
-                console.error("Failed to load repositories:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchRepos();
     }, []);
 
@@ -74,6 +82,21 @@ const RepositoryExplorer = () => {
                         <h2 className="text-lg font-bold text-white tracking-tight">Repository Explorer</h2>
                         <p className="text-xs text-brand-muted">Search and review available repositories for analysis</p>
                     </div>
+
+                    {user && (
+                        <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-2.5 rounded-premium self-start md:self-auto">
+                            {user.avatarUrl && (
+                                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full border border-brand-primary/20" />
+                            )}
+                            <div>
+                                <h3 className="text-xs font-bold text-white uppercase tracking-wider leading-none">{user.name}</h3>
+                                <p className="text-[10px] text-brand-muted leading-relaxed font-bold mt-1">@{user.login}</p>
+                                <span className="text-[9px] text-brand-primary font-black uppercase tracking-widest leading-none mt-1 block">
+                                    {user.publicRepos} Repositories Connected
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Filter Bar */}
@@ -128,6 +151,8 @@ const RepositoryExplorer = () => {
                 {/* Repository Cards List */}
                 {loading ? (
                     <LoadingSkeleton count={4} />
+                ) : error ? (
+                    <ErrorState message={error} onRetry={fetchRepos} />
                 ) : (
                     <motion.div
                         className="grid grid-cols-1 gap-3"
@@ -164,6 +189,7 @@ const RepositoryExplorer = () => {
                                         <div className="flex items-center gap-2">
                                             <Link
                                                 to={`/repositories/${repo.id}`}
+                                                onClick={() => setSelectedRepository(repo)}
                                                 className="text-sm font-bold text-[#8B5CF6] hover:underline hover:text-brand-accent transition"
                                             >
                                                 {repo.fullName}

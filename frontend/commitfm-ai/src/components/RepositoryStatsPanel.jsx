@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useRepository } from "../contexts/RepositoryContext";
 
 // Helper for language color dots
 const getLanguageColor = (lang) => {
@@ -6,8 +7,24 @@ const getLanguageColor = (lang) => {
     return colors[lang?.toLowerCase()] || "bg-slate-400";
 };
 
-const RepositoryStatsPanel = ({ repository, commits, contributors }) => {
+const RepositoryStatsPanel = ({ repository, contributors }) => {
     const langPercentages = repository.languagePercentages || {};
+    const { commits, commitsLoading, commitsError, commitsStatus } = useRepository();
+    const [visibleCommitsCount, setVisibleCommitsCount] = useState(15);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        if (scrollHeight - scrollTop - clientHeight < 20) {
+            if (visibleCommitsCount < commits.length && !isLoadingMore) {
+                setIsLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCommitsCount((prev) => Math.min(prev + 15, commits.length));
+                    setIsLoadingMore(false);
+                }, 400);
+            }
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -47,32 +64,56 @@ const RepositoryStatsPanel = ({ repository, commits, contributors }) => {
                 <div className="lg:col-span-7 space-y-2.5">
                     <h3 className="text-xs font-bold text-brand-muted uppercase tracking-wider pl-1">Recent Ingestion Commit Logs</h3>
                     
-                    <div className="premium-card bg-brand-surface border border-white/5 space-y-3 max-h-[350px] overflow-y-auto pr-1.5">
-                        {commits.map((c) => (
-                            <div key={c.sha} className="p-2.5 rounded-premium bg-brand-bg/40 border border-white/5 flex items-start justify-between gap-4 hover:border-white/10 transition">
-                                <div className="space-y-1 min-w-0 flex-1">
-                                    <p className="text-[11px] font-bold text-white truncate hover:underline cursor-pointer">
-                                        {c.message}
-                                    </p>
-                                    <p className="text-[9px] text-brand-muted">
-                                        Authored by <span className="font-semibold text-white">{c.authorName}</span> on {new Date(c.date).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <span className="text-[9px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.2 rounded-sm text-brand-accent">
-                                        {c.shortSha}
-                                    </span>
-                                    <span className="text-[8px] font-semibold text-emerald-400 bg-emerald-500/10 px-1 py-0.2 rounded-sm">
-                                        +{c.additions} / -{c.deletions}
-                                    </span>
-                                </div>
+                    <div 
+                        onScroll={handleScroll}
+                        className="premium-card bg-brand-surface border border-white/5 space-y-3 max-h-[350px] overflow-y-auto pr-1.5 flex flex-col min-h-[150px]"
+                    >
+                        {commitsLoading && commits.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center py-10 text-[10px] text-brand-muted font-semibold gap-2">
+                                <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                                Syncing repository commits...
                             </div>
-                        ))}
-
-                        {commits.length === 0 && (
-                            <div className="text-center py-10 text-[10px] text-brand-muted">
+                        ) : commitsError ? (
+                            <div className="flex-1 flex flex-col items-center justify-center py-10 text-[10px] text-red-400 font-semibold gap-2 text-center px-4">
+                                <span>⚠️ Error loading commits</span>
+                                <span className="text-zinc-500 font-medium">{commitsError}</span>
+                            </div>
+                        ) : commits.length === 0 ? (
+                            <div className="flex-1 flex items-center justify-center py-10 text-[10px] text-brand-muted font-semibold">
                                 No commit logs ingested.
                             </div>
+                        ) : (
+                            <>
+                                {commits.slice(0, visibleCommitsCount).map((c) => (
+                                    <div key={c.sha} className="p-2.5 rounded-premium bg-brand-bg/40 border border-white/5 flex items-start justify-between gap-4 hover:border-white/10 transition">
+                                        <div className="space-y-1 min-w-0 flex-1 flex gap-2.5 items-start">
+                                            {c.authorAvatar && (
+                                                <img src={c.authorAvatar} alt={c.authorName} className="w-6 h-6 rounded-full border border-white/5 mt-0.5" />
+                                            )}
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[11px] font-bold text-white truncate hover:underline cursor-pointer">
+                                                    {c.message}
+                                                </p>
+                                                <p className="text-[9px] text-brand-muted mt-0.5">
+                                                    Authored by <span className="font-semibold text-white">{c.authorName}</span> on {new Date(c.date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                            <span className="text-[9px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.2 rounded-sm text-brand-accent">
+                                                {c.shortSha}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {isLoadingMore && (
+                                    <div className="py-2 flex items-center justify-center gap-2 text-[10px] text-brand-muted font-semibold shrink-0">
+                                        <div className="w-3.5 h-3.5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                                        Loading commits...
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

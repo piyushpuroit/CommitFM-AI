@@ -1,8 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const WorkspaceNavigation = ({ activeModule, onSelect, collapsed, setCollapsed }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") setMobileOpen(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     const navItems = [
         { id: "overview", label: "Overview", icon: "📊" },

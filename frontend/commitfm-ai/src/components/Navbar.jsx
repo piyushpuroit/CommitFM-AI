@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useRepository } from "../contexts/RepositoryContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useRepository();
+
+  const handleConnect = () => {
+    setIsOpen(false);
+    window.location.href = "http://localhost:8080/api/auth/github/login";
+  };
 
   return (
     <nav className="sticky top-4 z-50 mb-6">
@@ -51,13 +58,36 @@ const Navbar = () => {
             >
               Developer DNA
             </NavLink>
-            <Link 
-              to="/connect" 
-              onClick={() => setIsOpen(false)}
-              className="px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md text-white shadow-sm text-xs sm:text-sm font-semibold text-center hover:opacity-90 transition"
-            >
-              Connect GitHub
-            </Link>
+
+            {user ? (
+              <div className="flex items-center gap-3 justify-center md:justify-start border-t md:border-t-0 border-white/5 pt-2.5 md:pt-0">
+                {user.avatarUrl && (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name}
+                    className="w-6.5 h-6.5 rounded-full border border-white/10"
+                    title={`${user.name} (${user.login})`}
+                  />
+                )}
+                <div className="text-left hidden lg:block">
+                  <div className="text-[10px] font-bold text-white leading-tight truncate max-w-[80px]">{user.name}</div>
+                  <div className="text-[8px] text-brand-muted leading-tight truncate max-w-[80px]">{user.publicRepos} repos</div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-brand-muted hover:text-white transition text-xs font-semibold cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleConnect}
+                className="px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-md text-white shadow-sm text-xs sm:text-sm font-semibold text-center hover:opacity-90 transition cursor-pointer"
+              >
+                Connect GitHub
+              </button>
+            )}
           </div>
         </div>
       </div>

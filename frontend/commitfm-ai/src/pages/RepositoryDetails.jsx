@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { githubService } from "../services/githubService";
+import { commitService } from "../services/commitService";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import ErrorState from "../components/common/ErrorState";
 import RepositoryStatsPanel from "../components/RepositoryStatsPanel";
@@ -10,6 +11,7 @@ import RepositoryStatsPanel from "../components/RepositoryStatsPanel";
 const RepositoryDetails = ({ repositoryId }) => {
     const { id } = useParams();
     const activeRepoId = repositoryId || (id ? parseInt(id, 10) : 101);
+    const { selectedRepository, setSelectedRepository } = useRepository();
 
     const [repository, setRepository] = useState(null);
     const [commits, setCommits] = useState([]);
@@ -20,16 +22,36 @@ const RepositoryDetails = ({ repositoryId }) => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                const [repoData, commitData, contributorData] = await Promise.all([
-                    githubService.getRepository(activeRepoId),
-                    githubService.getCommits(activeRepoId),
+                let owner, repoName;
+                if (selectedRepository && selectedRepository.id === activeRepoId) {
+                    owner = selectedRepository.owner?.login;
+                    repoName = selectedRepository.name;
+                } else {
+                    const repos = await githubService.getRepositories();
+                    const found = repos.find(r => r.id === activeRepoId);
+                    if (found) {
+                        owner = found.owner?.login;
+                        repoName = found.name;
+                    }
+                }
+
+                if (!owner || !repoName) {
+                    setError("Repository not found");
+                    setLoading(false);
+                    return;
+                }
+
+                const [repoDetails, commitData, contributorData] = await Promise.all([
+                    githubService.getRepositoryDetailsByPath(owner, repoName),
+                    commitService.getCommits(owner, repoName),
                     githubService.getContributors(activeRepoId)
                 ]);
 
-                if (!repoData) {
-                    setError("Repository not found");
+                if (!repoDetails) {
+                    setError("Repository details not found");
                 } else {
-                    setRepository(repoData);
+                    setRepository(repoDetails);
+                    setSelectedRepository(repoDetails);
                     setCommits(commitData);
                     setContributors(contributorData);
                 }
@@ -42,7 +64,7 @@ const RepositoryDetails = ({ repositoryId }) => {
         };
 
         fetchDetails();
-    }, [activeRepoId]);
+    }, [activeRepoId, selectedRepository, setSelectedRepository]);
 
     if (loading) {
         return (
