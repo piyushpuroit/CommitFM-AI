@@ -1,120 +1,25 @@
 import { GitHubRepository } from "../models/GitHubRepository";
-import { Commit } from "../models/Commit";
-import { PullRequest } from "../models/PullRequest";
-import { Contributor } from "../models/Contributor";
 
-// Mock Database representing repositories, commits, PRs, and contributors
-
-const mockCommits = {
-    101: [
-        {
-            sha: "a3b4c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2",
-            message: "refactor: consolidate dashboard grid to 3-column layout hierarchy",
-            authorName: "Piyush Purohit",
-            authorEmail: "piyush@commitfm.ai",
-            date: "2026-06-10T12:00:00Z",
-            additions: 120,
-            deletions: 45,
-            htmlUrl: "https://github.com/piyushpuroit/commitfm-ai/commit/a3b4c5d6",
-            repositoryId: 101
-        },
-        {
-            sha: "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1",
-            message: "feat: add float-animated badge widgets to landing page hero section",
-            authorName: "Piyush Purohit",
-            authorEmail: "piyush@commitfm.ai",
-            date: "2026-06-09T15:30:00Z",
-            additions: 85,
-            deletions: 12,
-            htmlUrl: "https://github.com/piyushpuroit/commitfm-ai/commit/b2c3d4e5",
-            repositoryId: 101
-        }
-    ],
-    102: [
-        {
-            sha: "9i8h7g6f5e4d3c2b1a0z9y8x7w6v5u4t3s2r1q0p",
-            message: "fix: resolve memory leak in pipeline telemetry streaming loop",
-            authorName: "Piyush Purohit",
-            authorEmail: "piyush@commitfm.ai",
-            date: "2026-06-08T09:15:00Z",
-            additions: 34,
-            deletions: 80,
-            htmlUrl: "https://github.com/piyushpuroit/telemetry-engine/commit/9i8h7g6f",
-            repositoryId: 102
-        }
-    ]
-};
-
-const mockPullRequests = {
-    101: [
-        {
-            id: 201,
-            number: 42,
-            title: "Introduce Developer Evolution Timeline view",
-            body: "Adds filtering and motion-supported list transitions to evolution timeline.",
-            state: "merged",
-            createdAt: "2026-06-09T10:00:00Z",
-            closedAt: "2026-06-09T14:30:00Z",
-            mergedAt: "2026-06-09T14:30:00Z",
-            user: { login: "piyushpuroit" },
-            commentsCount: 3,
-            additions: 240,
-            deletions: 15
-        }
-    ],
-    102: []
-};
-
-const mockContributors = {
-    101: [
-        {
-            id: 501,
-            login: "piyushpuroit",
-            avatarUrl: "https://github.com/piyushpuroit.png",
-            htmlUrl: "https://github.com/piyushpuroit",
-            contributionsCount: 154,
-            type: "User"
-        },
-        {
-            id: 502,
-            login: "dependabot[bot]",
-            avatarUrl: "https://github.com/dependabot.png",
-            htmlUrl: "https://github.com/dependabot",
-            contributionsCount: 12,
-            type: "Bot"
-        }
-    ],
-    102: [
-        {
-            id: 501,
-            login: "piyushpuroit",
-            avatarUrl: "https://github.com/piyushpuroit.png",
-            htmlUrl: "https://github.com/piyushpuroit",
-            contributionsCount: 89,
-            type: "User"
-        }
-    ]
-};
-
-/**
- * GitHubService Abstraction Layer.
- * Interacts with domain models and resolves mock data via Promises,
- * allowing it to be seamlessly replaced with real Fetch/Axios API calls later.
- */
 export const githubService = {
+    _repositoriesCache: null,
+
     /**
-     * Retrieves all repositories from backend or fallback mock database.
+     * Retrieves all repositories from backend.
      * @returns {Promise<GitHubRepository[]>}
      */
     async getRepositories() {
-        const response = await fetch("http://localhost:8080/api/github/repositories", {
+        if (this._repositoriesCache) {
+            return this._repositoriesCache;
+        }
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/github/repositories`, {
             credentials: "include"
         });
         if (!response.ok) {
             throw new Error(`Failed to fetch repositories: ${response.statusText}`);
         }
         const data = await response.json();
-        return data.map(repo => new GitHubRepository(repo));
+        this._repositoriesCache = data.map(repo => new GitHubRepository(repo));
+        return this._repositoriesCache;
     },
 
     /**
@@ -148,7 +53,7 @@ export const githubService = {
      * @returns {Promise<GitHubRepository>}
      */
     async getRepositoryDetailsByPath(owner, repo) {
-        const response = await fetch(`http://localhost:8080/api/github/repositories/${owner}/${repo}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/github/repositories/${owner}/${repo}`, {
             credentials: "include"
         });
         if (!response.ok) {
@@ -156,48 +61,6 @@ export const githubService = {
         }
         const data = await response.json();
         return new GitHubRepository(data);
-    },
-
-    /**
-     * Retrieves commits for a specific repository.
-     * @param {number|string} repoId - Repository identifier.
-     * @returns {Promise<Commit[]>}
-     */
-    async getCommits(repoId) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const commits = mockCommits[Number(repoId)] || [];
-                resolve(commits.map(c => new Commit(c)));
-            }, 100);
-        });
-    },
-
-    /**
-     * Retrieves pull requests for a specific repository.
-     * @param {number|string} repoId - Repository identifier.
-     * @returns {Promise<PullRequest[]>}
-     */
-    async getPullRequests(repoId) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const pulls = mockPullRequests[Number(repoId)] || [];
-                resolve(pulls.map(pr => new PullRequest(pr)));
-            }, 100);
-        });
-    },
-
-    /**
-     * Retrieves contributors for a specific repository.
-     * @param {number|string} repoId - Repository identifier.
-     * @returns {Promise<Contributor[]>}
-     */
-    async getContributors(repoId) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const users = mockContributors[Number(repoId)] || [];
-                resolve(users.map(u => new Contributor(u)));
-            }, 100);
-        });
     }
 };
 

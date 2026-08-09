@@ -1,106 +1,145 @@
-import React from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRepository } from "../contexts/RepositoryContext";
+import LoadingSkeleton from "./common/LoadingSkeleton";
+import { buildCoachInsights, buildResumeBullets } from "./analysis/dashboardUtils";
 
-const defaultCoachData = {
-  strengths: [
-    "Clean structural abstractions",
-    "Optimized render patterns",
-    "Comprehensive documentation"
-  ],
-  weaknesses: [
-    "Low test suite density",
-    "Frequent minor commit batches",
-    "Dependency bloat in layout layers"
-  ],
-  recommendedSkills: [
-    "Integration testing architectures",
-    "CI/CD workflow automation",
-    "Client-side caching strategies"
-  ],
-  nextTech: ["Next.js", "Docker", "GraphQL"],
-  resumeReadiness: 85
-};
+export function CareerCoach() {
+  const { analysisResults, analysisLoading, analysisError } = useRepository();
+  const [activeTab, setActiveTab] = useState("strengths");
 
-export function CareerCoach({ coachData = defaultCoachData }) {
-  const data = { ...defaultCoachData, ...coachData };
+  const insights = useMemo(() => buildCoachInsights(analysisResults), [analysisResults]);
+  const resumeBullets = useMemo(() => buildResumeBullets(analysisResults), [analysisResults]);
+
+  if (analysisLoading) {
+    return <LoadingSkeleton count={4} variant="cards" />;
+  }
+
+  if (analysisError) {
+    return (
+      <div className="premium-card bg-brand-surface border border-white/5 h-full flex flex-col items-center justify-center py-20 text-[10px] text-brand-muted font-semibold gap-3 min-h-[300px]">
+        <span>⚠️ Unable to load career coach insights</span>
+      </div>
+    );
+  }
+
+  if (!analysisResults) {
+    return (
+      <div className="premium-card bg-brand-surface border border-white/5 h-full flex flex-col items-center justify-center py-20 text-[10px] text-brand-muted font-semibold gap-3 min-h-[300px]">
+        <span>No analysis data available for coaching.</span>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: "strengths", label: "Strengths", icon: "🚀" },
+    { id: "weaknesses", label: "Weaknesses", icon: "⚠️" },
+    { id: "resume", label: "Resume Suggestions", icon: "📄" },
+    { id: "roadmap", label: "Learning Roadmap", icon: "🗺️" },
+    { id: "roles", label: "Recommended Roles", icon: "💼" }
+  ];
 
   return (
     <motion.div
-      className="premium-card bg-brand-surface/80 backdrop-blur-md flex flex-col gap-4 relative overflow-hidden"
+      className="premium-card bg-brand-surface/80 backdrop-blur-md flex flex-col gap-4 relative overflow-hidden text-left"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Decorative background glow */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full blur-xl pointer-events-none" />
 
-      {/* Header Panel */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
         <div>
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">AI Career Coach</h3>
-          <p className="text-[10px] text-brand-muted">Resume and skill optimization suggestions</p>
+          <p className="text-[10px] text-brand-muted">Portfolio and skill optimization insights from live GitHub metrics</p>
         </div>
-        <div className="flex items-baseline gap-1 bg-brand-primary/15 border border-brand-primary/25 px-2 py-0.5 rounded-full text-[10px] text-brand-text select-none">
-          <span className="text-[11px] font-black text-brand-accent">{data.resumeReadiness}%</span>
-          <span className="text-[8px] text-brand-muted">Resume Ready</span>
+
+        <div className="flex flex-wrap gap-1 bg-brand-bg/50 p-1 rounded-lg border border-white/5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition cursor-pointer select-none flex items-center gap-1 ${activeTab === tab.id
+                  ? "bg-brand-primary text-white shadow-md"
+                  : "text-brand-muted hover:text-white"
+                }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Recommended Tech & Skills Row */}
-      <div className="grid grid-cols-2 gap-3.5 bg-brand-bg/50 p-3 rounded-premium border border-white/5">
-        <div>
-          <h4 className="text-[9px] font-bold text-white uppercase tracking-wider mb-1.5">Next Tech to Learn</h4>
-          <div className="flex flex-wrap gap-1">
-            {data.nextTech.map((tech, idx) => (
-              <span key={idx} className="text-[9px] bg-brand-primary/10 border border-brand-primary/25 text-brand-accent px-1.5 py-0.5 rounded-sm font-semibold select-none">
-                {tech}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h4 className="text-[9px] font-bold text-white uppercase tracking-wider mb-1.5">Suggested Skills</h4>
-          <div className="flex flex-wrap gap-1">
-            {data.recommendedSkills.map((skill, idx) => (
-              <span key={idx} className="text-[9px] bg-white/5 border border-white/5 text-brand-text px-1.5 py-0.5 rounded-sm font-medium select-none">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+      <div className="min-h-[220px] pt-1">
+        <AnimatePresence mode="wait">
+          {activeTab === "strengths" && (
+            <motion.div key="strengths" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Verified Engineering Strengths</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {insights.strengths.map((str, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-brand-bg/40 border border-white/5 text-xs text-white">✓ {str}</div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-      {/* Strengths & Focus Areas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-        {/* Strengths */}
-        <div className="space-y-1.5">
-          <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-            <span>🚀</span> Key Strengths
-          </h4>
-          <ul className="space-y-1">
-            {data.strengths.map((str, idx) => (
-              <li key={idx} className="text-[10px] text-brand-text flex items-start gap-1.5">
-                <span className="text-emerald-500 font-semibold">•</span>
-                <span>{str}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {activeTab === "weaknesses" && (
+            <motion.div key="weaknesses" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Identified Growth Areas</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {insights.weaknesses.map((weak, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-brand-bg/40 border border-white/5 text-xs text-slate-300">▲ {weak}</div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-        {/* Weaknesses / Focus Areas */}
-        <div className="space-y-1.5">
-          <h4 className="text-[10px] font-bold text-brand-accent uppercase tracking-wider flex items-center gap-1">
-            <span>🔧</span> Growth Areas
-          </h4>
-          <ul className="space-y-1">
-            {data.weaknesses.map((weak, idx) => (
-              <li key={idx} className="text-[10px] text-brand-muted flex items-start gap-1.5">
-                <span className="text-brand-accent font-semibold">•</span>
-                <span>{weak}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {activeTab === "resume" && (
+            <motion.div key="resume" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-brand-accent uppercase tracking-wider">ATS Resume Bullet Suggestions</h4>
+              <div className="space-y-2">
+                {resumeBullets.map((bullet, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-brand-bg/40 border border-white/5 text-xs font-mono text-slate-200">• {bullet}</div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "roadmap" && (
+            <motion.div key="roadmap" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Targeted Learning Priorities</h4>
+              <div className="space-y-2">
+                {insights.learningPriorities.map((topic, idx) => (
+                  <div key={idx} className="p-3 rounded-lg bg-brand-bg/40 border border-white/5 text-xs font-semibold text-white">🎯 {topic}</div>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <h5 className="text-[9px] font-bold text-white uppercase tracking-wider">Missing Skills</h5>
+                {insights.missingSkills.map((skill, idx) => (
+                  <div key={idx} className="text-[10px] text-brand-muted">• {skill}</div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "roles" && (
+            <motion.div key="roles" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-brand-primary uppercase tracking-wider">Recommended Software Roles</h4>
+              <div className="flex flex-wrap gap-2">
+                {analysisResults.careerCoach?.recommendedRoles?.map((role, idx) => (
+                  <span key={idx} className="px-3 py-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/30 text-xs font-bold text-brand-accent">💼 {role}</span>
+                ))}
+              </div>
+              <div className="space-y-2 mt-3">
+                <h5 className="text-[9px] font-bold text-white uppercase tracking-wider">Interview Focus Areas</h5>
+                {insights.interviewFocusAreas.map((area, idx) => (
+                  <div key={idx} className="text-[10px] text-brand-muted">• {area}</div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

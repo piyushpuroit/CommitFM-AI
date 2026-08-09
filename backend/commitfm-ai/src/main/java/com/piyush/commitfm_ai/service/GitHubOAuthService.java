@@ -53,7 +53,12 @@ public class GitHubOAuthService {
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                request,
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+            );
             if (response.getBody() != null && response.getBody().containsKey("access_token")) {
                 return (String) response.getBody().get("access_token");
             }
@@ -73,7 +78,12 @@ public class GitHubOAuthService {
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                request,
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+            );
             Map<String, Object> body = response.getBody();
             if (body != null) {
                 String login = (String) body.get("login");

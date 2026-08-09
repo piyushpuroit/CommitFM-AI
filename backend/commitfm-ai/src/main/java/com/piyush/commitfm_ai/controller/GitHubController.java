@@ -3,6 +3,7 @@ package com.piyush.commitfm_ai.controller;
 import com.piyush.commitfm_ai.dto.GitHubRepositoryDto;
 import com.piyush.commitfm_ai.dto.GitHubRepositoryDetailsDto;
 import com.piyush.commitfm_ai.dto.CommitDto;
+import com.piyush.commitfm_ai.dto.TelemetryDto;
 import com.piyush.commitfm_ai.service.GitHubService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url:http://localhost:5173}", allowCredentials = "true")
 public class GitHubController {
 
     private final GitHubService githubService;
@@ -67,5 +68,19 @@ public class GitHubController {
 
         List<CommitDto> commits = githubService.getRepositoryCommits(accessToken, owner, repo);
         return ResponseEntity.ok(commits);
+    }
+
+    @GetMapping("/github/repositories/{owner}/{repo}/telemetry")
+    public ResponseEntity<TelemetryDto> getRepositoryTelemetry(
+            @PathVariable("owner") String owner,
+            @PathVariable("repo") String repo,
+            HttpSession session) {
+        String accessToken = (String) session.getAttribute("accessToken");
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        TelemetryDto telemetry = githubService.getRepositoryTelemetry(accessToken, owner, repo);
+        return ResponseEntity.ok(telemetry);
     }
 }

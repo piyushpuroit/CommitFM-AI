@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/*
+Disallow: /connect
+Disallow: /repositories
+Disallow: /settings
+Disallow: /search
+Disallow: /profile
+
+Sitemap: https://commitfm.io/sitemap.xml

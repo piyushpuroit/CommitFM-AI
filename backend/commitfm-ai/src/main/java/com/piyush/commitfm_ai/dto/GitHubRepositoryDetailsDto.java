@@ -31,6 +31,9 @@ public class GitHubRepositoryDetailsDto {
     @JsonProperty("updated_at")
     private String updatedAt;
 
+    @JsonProperty("pushed_at")
+    private String pushedAt;
+
     private int size;
     private List<String> topics;
     private String homepage;
@@ -41,12 +44,16 @@ public class GitHubRepositoryDetailsDto {
     @JsonProperty("html_url")
     private String htmlUrl;
 
+    // Computed language distribution
+    private Map<String, Long> languages;
+
     public GitHubRepositoryDetailsDto() {}
 
     public GitHubRepositoryDetailsDto(String name, String description, Map<String, Object> owner, String language,
-                                      Map<String, Object> license, int stars, int forks, int watchers,
-                                      String defaultBranch, String visibility, String createdAt, String updatedAt,
-                                      int size, List<String> topics, String homepage, int openIssues, String htmlUrl) {
+                                       Map<String, Object> license, int stars, int forks, int watchers,
+                                       String defaultBranch, String visibility, String createdAt, String updatedAt,
+                                       String pushedAt, int size, List<String> topics, String homepage, int openIssues,
+                                       String htmlUrl, Map<String, Long> languages) {
         this.name = name;
         this.description = description;
         this.owner = owner;
@@ -59,16 +66,21 @@ public class GitHubRepositoryDetailsDto {
         this.visibility = visibility;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.pushedAt = pushedAt;
         this.size = size;
         this.topics = topics;
         this.homepage = homepage;
         this.openIssues = openIssues;
         this.htmlUrl = htmlUrl;
+        this.languages = languages;
     }
 
     // Getters and Setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    @JsonProperty("repo")
+    public String getRepo() { return name; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
@@ -103,6 +115,9 @@ public class GitHubRepositoryDetailsDto {
     public String getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 
+    public String getPushedAt() { return pushedAt; }
+    public void setPushedAt(String pushedAt) { this.pushedAt = pushedAt; }
+
     public int getSize() { return size; }
     public void setSize(int size) { this.size = size; }
 
@@ -117,4 +132,7 @@ public class GitHubRepositoryDetailsDto {
 
     public String getHtmlUrl() { return htmlUrl; }
     public void setHtmlUrl(String htmlUrl) { this.htmlUrl = htmlUrl; }
+
+    public Map<String, Long> getLanguages() { return languages; }
+    public void setLanguages(Map<String, Long> languages) { this.languages = languages; }
 }

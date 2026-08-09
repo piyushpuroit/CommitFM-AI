@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*.properties
+!application-production.properties
+data/
+*.db
+

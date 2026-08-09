@@ -6,9 +6,10 @@ export const commitService = {
      * @param {number|string} repositoryId - Repository identifier.
      * @returns {Promise<Commit[]>}
      */
-    async getCommits(owner, repo) {
-        const response = await fetch(`http://localhost:8080/api/github/repositories/${owner}/${repo}/commits`, {
-            credentials: "include"
+    async getCommits(owner, repo, options = {}) {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/github/repositories/${owner}/${repo}/commits`, {
+            credentials: "include",
+            ...options
         });
         if (!response.ok) {
             throw new Error(`Failed to fetch commits: ${response.statusText}`);

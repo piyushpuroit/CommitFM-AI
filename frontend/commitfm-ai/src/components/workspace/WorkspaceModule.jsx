@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import LoadingSkeleton from "../common/LoadingSkeleton";
+import { useRepository } from "../../contexts/RepositoryContext";
 
 // Dynamic lazy loads for workspace analysis modules
 const OverviewAnalysis = lazy(() => import("../analysis/OverviewAnalysis"));
@@ -12,7 +13,9 @@ const CareerCoachAnalysis = lazy(() => import("../analysis/CareerCoachAnalysis")
 const ResumeGeneratorAnalysis = lazy(() => import("../analysis/ResumeGeneratorAnalysis"));
 const LearningRoadmapAnalysis = lazy(() => import("../analysis/LearningRoadmapAnalysis"));
 
-const WorkspaceModule = ({ activeModule, commits, commitsLoading, onOpenPanel }) => {
+const WorkspaceModule = ({ activeModule, onOpenPanel }) => {
+    const { commits, commitsLoading } = useRepository();
+
     const renderContent = () => {
         switch (activeModule) {
             case "overview":

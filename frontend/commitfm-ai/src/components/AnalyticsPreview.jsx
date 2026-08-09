@@ -5,7 +5,7 @@ const AnalyticsPreview = () => {
     const [isPlaying, setIsPlaying] = useState(false);
 
     return (
-        <section id="dashboard" className="mb-8 sm:mb-10 lg:mb-12">
+        <section id="analytics-preview" className="mb-8 sm:mb-10 lg:mb-12">
             <div className="rounded-lg sm:rounded-2xl p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-white/6 backdrop-blur-md">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
                     {/* Stats Grid */}

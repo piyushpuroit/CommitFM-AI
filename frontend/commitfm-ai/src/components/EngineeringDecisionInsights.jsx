@@ -1,51 +1,67 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRepository } from "../contexts/RepositoryContext";
 
-const defaultInsights = {
-    strengths: [
-        {
-            title: "Modular State Management",
-            description: "State boundaries are strictly maintained using lightweight contexts and hooks, preventing side-effect leaks."
-        },
-        {
-            title: "Decoupled Service Architecture",
-            description: "GitHub domain mappings are isolated inside an independent async abstraction layer, making external client upgrades trivial."
-        }
-    ],
-    debt: [
-        {
-            title: "CSS Class Duplication",
-            description: "Several presentation elements re-declare ad-hoc card borders instead of referencing the shared design system."
-        },
-        {
-            title: "Missing Prop Types Validation",
-            description: "Onboarding steps receive generic callbacks without formal runtime type assertions, exposing potential console warnings."
-        }
-    ],
-    refactoring: [
-        {
-            title: "Consolidate Step Progress Connectors",
-            description: "Abstract progress indicator nodes in OnboardingPage to a reusable StepConnector component."
-        },
-        {
-            title: "Standardize Custom Fetch Handlers",
-            description: "Encapsulate raw window.fetch routines inside a unified REST client helper to centralize authentication handling."
-        }
-    ],
-    maintainability: [
-        {
-            title: "High File Reuse Rate",
-            description: "Page templates consistently extend MainLayout, keeping header and navbar configurations unified."
-        },
-        {
-            title: "Cohesive Class Footprint",
-            description: "Vast majority of service modules contain single-responsibility functions under 50 lines of code."
-        }
-    ]
-};
-
-const EngineeringDecisionInsights = ({ insights = defaultInsights }) => {
+const EngineeringDecisionInsights = () => {
+    const { analysisResults, analysisLoading } = useRepository();
     const [selectedTab, setSelectedTab] = useState("strengths");
+
+    if (analysisLoading || !analysisResults) {
+        return (
+            <div className="premium-card bg-brand-surface border border-white/5 h-full flex flex-col items-center justify-center py-20 text-[10px] text-brand-muted font-semibold gap-3 min-h-[300px]">
+                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <span>Generating decision insights...</span>
+            </div>
+        );
+    }
+
+    const { repositorySummary, repositoryMetrics, repositoryActivity } = analysisResults;
+
+    const numLangs = Object.keys(repositorySummary.languageDistribution || {}).length;
+    const isMultilingual = numLangs > 1;
+
+    const insights = {
+        strengths: [
+            {
+                title: isMultilingual ? "Multilingual Architecture" : "Focused Core Technology Stack",
+                description: `This codebase implements ${numLangs} active languages, led by ${repositoryMetrics.defaultLanguage || "Unknown"}, encouraging single-responsibility patterns.`
+            },
+            {
+                title: "Decoupled Git Workspace Integration",
+                description: `Consumes data securely using OAuth credentials for ${repositorySummary.owner}, ensuring direct API updates without database dependencies.`
+            }
+        ],
+        debt: [
+            {
+                title: repositoryMetrics.numberOfFiles > 150 ? "Directory Density Warning" : "Directory Layout Status",
+                description: `Workspace maps ${repositoryMetrics.numberOfFiles} files across ${repositoryMetrics.numberOfDirectories} folders. Consider simplifying path hierarchies.`
+            },
+            {
+                title: "Repository Engagement Signals",
+                description: `Visibility and code reuse signals show ${repositorySummary.stars} stars and ${repositorySummary.forks} forks, which suggests personal or internal-focused project settings.`
+            }
+        ],
+        refactoring: [
+            {
+                title: "Flatten Complex Directory Trees",
+                description: `Identified ${repositoryMetrics.numberOfDirectories} subdirectories. Flattening folder scopes can help reduce navigation nesting in IDEs.`
+            },
+            {
+                title: `Strict Verification for ${repositoryMetrics.defaultLanguage || "Main Stack"}`,
+                description: `Configuring strict compilation guidelines for ${repositoryMetrics.defaultLanguage || "your main language"} will reduce runtime crashes.`
+            }
+        ],
+        maintainability: [
+            {
+                title: "Clean Branch Posture",
+                description: `This workspace integrates files around the default branch '${repositorySummary.defaultBranch}', with ${repositoryActivity.activeBranches?.length || 1} active branches monitored.`
+            },
+            {
+                title: "Cohesive Codebase Volume",
+                description: `Estimated workspace codebase size is ${repositoryMetrics.totalSize} KB, keeping build times and network payloads extremely lightweight.`
+            }
+        ]
+    };
 
     const tabs = [
         { id: "strengths", label: "Architectural Strengths", icon: "🛡️", color: "text-[#22D3EE] border-[#22D3EE]/20 bg-[#22D3EE]/5" },
@@ -65,7 +81,7 @@ const EngineeringDecisionInsights = ({ insights = defaultInsights }) => {
             {/* Header */}
             <div className="border-b border-white/5 pb-3 relative z-10">
                 <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Engineering Decisions Diagnostic</h4>
-                <p className="text-[9px] text-brand-muted mt-0.5">AI codebase heuristics and design pattern analysis</p>
+                <p className="text-[9px] text-brand-muted mt-0.5">Codebase heuristics and design pattern analysis</p>
             </div>
 
             {/* Tab Selectors */}

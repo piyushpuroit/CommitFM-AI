@@ -1,19 +1,28 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import RepoConnectStep from "../components/onboarding/RepoConnectStep";
 import RepoSelectionStep from "../components/onboarding/RepoSelectionStep";
 import AnalysisLoadingStep from "../components/onboarding/AnalysisLoadingStep";
 import AnalysisCompleteStep from "../components/onboarding/AnalysisCompleteStep";
 import { useRepository } from "../contexts/RepositoryContext";
+import { getApiUrl } from "../services/apiClient";
 
 const OnboardingPage = () => {
     const [step, setStep] = useState(1);
     const [selectedRepo, setSelectedRepo] = useState(null);
     const navigate = useNavigate();
-    const { setSelectedRepository } = useRepository();
+    const { user, setSelectedRepository } = useRepository();
 
-    const handleConnect = () => setStep(2);
+    useEffect(() => {
+        if (user && step === 1) {
+            setStep(2);
+        }
+    }, [user, step]);
+
+    const handleConnect = () => {
+        window.location.href = `${getApiUrl()}/api/auth/github/login`;
+    };
 
     const handleSelectRepo = (repo) => {
         setSelectedRepo(repo);

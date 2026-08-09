@@ -15,7 +15,7 @@ const getLanguageColor = (lang) => {
 };
 
 const RepositoryExplorer = () => {
-    const { user, setSelectedRepository } = useRepository();
+    const { user, switchRepository } = useRepository();
     const [repositories, setRepositories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -188,8 +188,8 @@ const RepositoryExplorer = () => {
                                     <div className="space-y-1 max-w-2xl">
                                         <div className="flex items-center gap-2">
                                             <Link
-                                                to={`/repositories/${repo.id}`}
-                                                onClick={() => setSelectedRepository(repo)}
+                                                to={`/dashboard/${repo.owner?.login || repo.owner}/${repo.name}`}
+                                                onClick={() => switchRepository(repo)}
                                                 className="text-sm font-bold text-[#8B5CF6] hover:underline hover:text-brand-accent transition"
                                             >
                                                 {repo.fullName}

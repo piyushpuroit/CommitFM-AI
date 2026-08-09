@@ -18,7 +18,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = "${frontend.url:http://localhost:5173}", allowCredentials = "true")
 public class AuthController {
 
     private final GitHubOAuthService oauthService;

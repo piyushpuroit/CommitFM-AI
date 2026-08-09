@@ -61,9 +61,39 @@ const RepoConnectStep = ({ onConnect }) => {
                     </svg>
                     Connect GitHub
                 </motion.button>
-                <motion.p variants={itemVariants} className="text-center text-slate-500 mt-2.5 sm:mt-3 text-xs">
-                    Your data is secure. We never store credentials.
-                </motion.p>
+                
+                {/* Trust/Permissions disclosure panel */}
+                <motion.div 
+                    variants={itemVariants} 
+                    className="mt-6 text-left p-4 rounded-premium bg-brand-bg/40 border border-white/5 space-y-3"
+                >
+                    <div className="flex items-start gap-2.5">
+                        <span className="text-base">🔒</span>
+                        <div>
+                            <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Connection Scope & Details</h4>
+                            <p className="text-[10px] text-brand-muted leading-relaxed">
+                                We request standard authentication to connect your GitHub profile. CommitFM operates as a client-side visualization platform.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="border-t border-white/5 pt-2 space-y-2">
+                        <div className="flex justify-between items-start text-[10px]">
+                            <span className="text-white font-bold">read:user Scope</span>
+                            <span className="text-brand-muted text-right max-w-[200px]">Read public profile (avatar, username) to customize dashboard.</span>
+                        </div>
+                        <div className="flex justify-between items-start text-[10px]">
+                            <span className="text-white font-bold">repo Scope</span>
+                            <span className="text-brand-muted text-right max-w-[200px]">Analyze branch names, commit metadata, languages, PRs & issues.</span>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-2">
+                        <p className="text-[9px] text-brand-muted leading-relaxed">
+                            <strong>Why is repo access required?</strong> To compute commit streaks, codebase hygiene indices, and compile your behavioral developer DNA archetype. <em>We never store your source code.</em>
+                        </p>
+                    </div>
+                </motion.div>
             </div>
         </motion.div>
     );
