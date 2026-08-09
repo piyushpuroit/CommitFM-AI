@@ -7,10 +7,28 @@ const Footer = () => {
 
     return (
         <footer className="py-6 text-slate-500 text-xs border-t border-indigo-700/20 mt-auto flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
-            <div>
-                © {new Date().getFullYear()} CommitFM. All rights reserved.
+            <div className="flex flex-col gap-1 items-center sm:items-start">
+                <div>
+                    © {new Date().getFullYear()} CommitFM AI. All rights reserved.
+                </div>
+                <div className="text-slate-400">
+                    Built by <span className="text-white font-medium">Piyush Purohit</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                    <a href="https://piyush-purohit-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition">Portfolio</a>
+                    <span className="text-slate-700">|</span>
+                    <a href="https://github.com/piyushpuroit" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition">GitHub</a>
+                    <span className="text-slate-700">|</span>
+                    <a href="https://www.linkedin.com/in/piyush-purohit-qs5474/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-accent transition">LinkedIn</a>
+                </div>
             </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 justify-center sm:justify-end">
+                <button 
+                    onClick={() => setActiveModal("about")}
+                    className="hover:text-brand-primary transition duration-150 cursor-pointer font-medium text-slate-400"
+                >
+                    About
+                </button>
                 <button 
                     onClick={() => setActiveModal("privacy")}
                     className="hover:text-brand-primary transition duration-150 cursor-pointer"
@@ -44,6 +62,7 @@ const Footer = () => {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-4 border-b border-white/5">
                             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                                {activeModal === "about" && "About CommitFM AI"}
                                 {activeModal === "privacy" && "Privacy Policy"}
                                 {activeModal === "terms" && "Terms of Service"}
                                 {activeModal === "permissions" && "GitHub Data & Permissions"}
@@ -135,6 +154,31 @@ const Footer = () => {
                                     <p>
                                         Our engineering and product support team will respond to inquiries within 2 business days.
                                     </p>
+                                </>
+                            )}
+
+                            {activeModal === "about" && (
+                                <>
+                                    <p className="font-semibold text-white">
+                                        CommitFM AI is an independent developer intelligence platform created by Piyush Purohit.
+                                    </p>
+                                    <p>
+                                        It is designed to give developers, team leads, and engineering managers deep insight into their repositories. By analyzing commit velocity, code complexity, PR interactions, and technology distributions, CommitFM AI constructs a comprehensive Developer DNA profile and repository health metrics.
+                                    </p>
+                                    <p>
+                                        Connect with the creator:
+                                    </p>
+                                    <ul className="list-disc pl-5 space-y-2">
+                                        <li>
+                                            <a href="https://piyush-purohit-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Portfolio Website</a>
+                                        </li>
+                                        <li>
+                                            <a href="https://github.com/piyushpuroit" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">GitHub Profile</a>
+                                        </li>
+                                        <li>
+                                            <a href="https://www.linkedin.com/in/piyush-purohit-qs5474/" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">LinkedIn Connections</a>
+                                        </li>
+                                    </ul>
                                 </>
                             )}
                         </div>

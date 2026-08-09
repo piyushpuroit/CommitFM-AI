@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useRepository } from "../contexts/RepositoryContext";
 import { getApiUrl } from "../services/apiClient";
+import logoImg from "../assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,8 +18,8 @@ const Navbar = () => {
       <div className="max-w-[1600px] mx-auto px-2 sm:px-3">
         <div className="backdrop-blur-md bg-white/6 border border-white/8 rounded-xl px-3 py-2.5 flex flex-col md:flex-row md:items-center justify-between shadow-md gap-2.5 md:gap-0">
           <div className="flex items-center justify-between w-full md:w-auto">
-            <Link to="/" className="text-base sm:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-300 to-slate-400 select-none">
-              CommitFM
+            <Link to="/" className="flex items-center gap-2 select-none">
+              <img src={logoImg} alt="CommitFM AI" className="h-6 sm:h-8 w-auto object-contain" />
             </Link>
             
             {/* Hamburger button for mobile */}
