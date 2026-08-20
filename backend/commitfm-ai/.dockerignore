@@ -1,0 +1,11 @@
+target/
+.git/
+.env
+*.zip
+Dockerfile
+.dockerignore
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.releaseBackup
+release.properties
