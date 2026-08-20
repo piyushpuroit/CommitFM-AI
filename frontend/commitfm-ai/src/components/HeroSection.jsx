@@ -1,7 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useRepository } from "../contexts/RepositoryContext";
+import { getApiUrl } from "../services/apiClient";
 
 const HeroSection = () => {
+    const { user } = useRepository();
+    const navigate = useNavigate();
+
+    const handleConnectGitHub = (e) => {
+        e.preventDefault();
+        if (user) {
+            navigate("/repositories");
+        } else {
+            window.location.href = `${getApiUrl()}/api/auth/github/login`;
+        }
+    };
+
     // Generate dummy grid data for GitHub activity preview
     const contributionWeeks = Array.from({ length: 14 }, (_, i) => 
         Array.from({ length: 4 }, (_, j) => {
@@ -65,10 +79,13 @@ const HeroSection = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.3 }}
                     >
-                        <Link to="/connect" className="btn-premium-primary px-5 py-2.5 text-sm font-semibold rounded-lg shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all duration-300">
+                        <button
+                            onClick={handleConnectGitHub}
+                            className="btn-premium-primary px-5 py-2.5 text-sm font-semibold rounded-lg shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all duration-300 text-center cursor-pointer select-none"
+                        >
                             Connect GitHub
-                        </Link>
-                        <Link to="/dashboard" className="btn-premium-secondary px-5 py-2.5 text-sm font-semibold rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300">
+                        </button>
+                        <Link to="/demo" className="btn-premium-secondary px-5 py-2.5 text-sm font-semibold rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300">
                             View Demo
                         </Link>
                     </motion.div>

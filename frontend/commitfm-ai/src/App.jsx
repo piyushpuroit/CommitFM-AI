@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ComparePage from "./pages/ComparePage";
 import GlobalSearchPage from "./pages/GlobalSearchPage";
 import SettingsPage from "./pages/SettingsPage";
+import DemoDashboardPage from "./pages/DemoDashboardPage";
 
 function AppRoutes() {
   const { user, userLoading } = useRepository();
@@ -30,6 +31,7 @@ function AppRoutes() {
       {/* Public Landing Page */}
       <Route path="/" element={user ? <Navigate to="/repositories" /> : <HomePage />} />
       <Route path="/connect" element={user ? <Navigate to="/repositories" /> : <Navigate to="/" />} />
+      <Route path="/demo" element={<DemoDashboardPage />} />
 
       {/* Authenticated Routes */}
       <Route path="/repositories" element={user ? <RepositoryExplorer /> : <Navigate to="/" />} />

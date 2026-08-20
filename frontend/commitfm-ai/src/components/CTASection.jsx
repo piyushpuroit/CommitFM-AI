@@ -1,7 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useRepository } from "../contexts/RepositoryContext";
+import { getApiUrl } from "../services/apiClient";
 
 const CTASection = () => {
+    const { user } = useRepository();
+    const navigate = useNavigate();
+
+    const handleGetStarted = (e) => {
+        e.preventDefault();
+        if (user) {
+            navigate("/repositories");
+        } else {
+            window.location.href = `${getApiUrl()}/api/auth/github/login`;
+        }
+    };
+
     return (
         <motion.section 
             className="mb-8"
@@ -23,12 +37,15 @@ const CTASection = () => {
                 </div>
 
                 <div className="relative z-10">
-                    <Link to="/connect" className="btn-premium-primary inline-flex items-center gap-2">
+                    <button 
+                        onClick={handleGetStarted}
+                        className="btn-premium-primary inline-flex items-center gap-2 cursor-pointer select-none"
+                    >
                         <span>Get Started Free</span>
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                         </svg>
-                    </Link>
+                    </button>
                 </div>
             </div>
         </motion.section>
@@ -36,3 +53,4 @@ const CTASection = () => {
 };
 
 export default CTASection;
+
