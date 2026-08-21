@@ -20,6 +20,12 @@ export function RepositoryProvider({ children }) {
   const [error, setError] = useState(null);
 
   const [user, setUser] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("auth") === "success") {
+      sessionStorage.removeItem("commitfm_user");
+      sessionStorage.removeItem("commitfm_auth_checked");
+      return null;
+    }
     const cached = sessionStorage.getItem("commitfm_user");
     if (cached) {
       try {
@@ -32,6 +38,10 @@ export function RepositoryProvider({ children }) {
   });
 
   const [userLoading, setUserLoading] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("auth") === "success") {
+      return true;
+    }
     return sessionStorage.getItem("commitfm_auth_checked") !== "true";
   });
 
@@ -113,6 +123,15 @@ export function RepositoryProvider({ children }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
+    // Clean up query parameters from the address bar without reload
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("auth")) {
+      params.delete("auth");
+      const newSearch = params.toString();
+      const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
     fetch(`${getApiUrl()}/api/auth/me`, { credentials: "include" })
       .then((res) => {
         if (res.ok) return res.json();
@@ -131,6 +150,7 @@ export function RepositoryProvider({ children }) {
         setUserLoading(false);
       });
   }, []);
+
 
   const logout = async () => {
     try {

@@ -18,7 +18,9 @@ const DemoDashboardPage = lazy(() => import("./pages/DemoDashboardPage"));
 function AppRoutes() {
   const { user, userLoading } = useRepository();
 
-  const isPublicRoute = window.location.pathname === "/" || window.location.pathname === "/demo";
+  const params = new URLSearchParams(window.location.search);
+  const isAuthCallback = params.get("auth") === "success";
+  const isPublicRoute = (window.location.pathname === "/" || window.location.pathname === "/demo") && !isAuthCallback;
 
   if (userLoading && !isPublicRoute) {
     return (
@@ -28,6 +30,7 @@ function AppRoutes() {
       </div>
     );
   }
+
 
   return (
     <Suspense fallback={
