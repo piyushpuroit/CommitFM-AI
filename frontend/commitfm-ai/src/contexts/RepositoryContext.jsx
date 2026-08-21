@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { getApiUrl } from "../services/apiClient";
 
+import { githubService } from "../services/githubService";
+
 export const RepositoryContext = createContext(undefined);
 
 export function RepositoryProvider({ children }) {
@@ -17,10 +19,25 @@ export function RepositoryProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const cached = sessionStorage.getItem("commitfm_user");
+    if (cached) {
+      try {
+        return cached === "null" ? null : JSON.parse(cached);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [userLoading, setUserLoading] = useState(() => {
+    return sessionStorage.getItem("commitfm_auth_checked") !== "true";
+  });
 
   const abortControllerRef = useRef(null);
+  const analysisCacheRef = useRef({});
+  const fetchedRef = useRef(false);
 
   const setSelectedRepository = (repo) => {
     setSelectedRepositoryState(repo);
@@ -32,6 +49,16 @@ export function RepositoryProvider({ children }) {
   };
 
   const fetchAnalysis = async (owner, repoName) => {
+    const cacheKey = `${owner}/${repoName}`.toLowerCase();
+    
+    // Check cache
+    if (analysisCacheRef.current[cacheKey]) {
+      setAnalysisResult(analysisCacheRef.current[cacheKey]);
+      setLoading(false);
+      setError(null);
+      return analysisCacheRef.current[cacheKey];
+    }
+
     // Cancel previous requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -41,7 +68,6 @@ export function RepositoryProvider({ children }) {
 
     setLoading(true);
     setError(null);
-    setAnalysisResult(null);
 
     try {
       const response = await fetch(`${getApiUrl()}/api/analysis/${owner}/${repoName}`, {
@@ -53,6 +79,7 @@ export function RepositoryProvider({ children }) {
       }
       const data = await response.json();
       if (!signal.aborted) {
+        analysisCacheRef.current[cacheKey] = data;
         setAnalysisResult(data);
         setLoading(false);
         return data;
@@ -83,6 +110,9 @@ export function RepositoryProvider({ children }) {
   };
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     fetch(`${getApiUrl()}/api/auth/me`, { credentials: "include" })
       .then((res) => {
         if (res.ok) return res.json();
@@ -90,11 +120,14 @@ export function RepositoryProvider({ children }) {
       })
       .then((data) => {
         setUser(data);
+        sessionStorage.setItem("commitfm_user", JSON.stringify(data));
       })
       .catch(() => {
         setUser(null);
+        sessionStorage.setItem("commitfm_user", "null");
       })
       .finally(() => {
+        sessionStorage.setItem("commitfm_auth_checked", "true");
         setUserLoading(false);
       });
   }, []);
@@ -105,6 +138,10 @@ export function RepositoryProvider({ children }) {
       setUser(null);
       setSelectedRepository(null);
       setAnalysisResult(null);
+      githubService._repositoriesCache = null;
+      analysisCacheRef.current = {};
+      sessionStorage.removeItem("commitfm_user");
+      sessionStorage.removeItem("commitfm_auth_checked");
     } catch (err) {
       console.error("Logout failed:", err);
     }

@@ -25,12 +25,12 @@ const ProfilePage = () => {
     loadData();
   }, [user]);
 
-  if (userLoading || loadingRepos) {
+  if (userLoading) {
     return (
       <MainLayout>
         <div className="flex flex-col items-center justify-center py-24 text-[10px] text-brand-muted font-semibold gap-3">
           <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-          Loading developer portfolio...
+          Loading profile...
         </div>
       </MainLayout>
     );
@@ -158,12 +158,20 @@ const ProfilePage = () => {
         {/* Badges Ribbon */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 -mt-1">
           <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider shrink-0">Achievements:</span>
-          {badges.map((b, idx) => (
-            <span key={idx} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white text-[10px] font-bold shrink-0 flex items-center gap-1.5">
-              <span>{b.icon}</span>
-              <span>{b.title}</span>
-            </span>
-          ))}
+          {loadingRepos ? (
+            <>
+              <div className="h-5 w-20 bg-white/5 animate-pulse rounded-full shrink-0" />
+              <div className="h-5 w-24 bg-white/5 animate-pulse rounded-full shrink-0" />
+              <div className="h-5 w-16 bg-white/5 animate-pulse rounded-full shrink-0" />
+            </>
+          ) : (
+            badges.map((b, idx) => (
+              <span key={idx} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white text-[10px] font-bold shrink-0 flex items-center gap-1.5">
+                <span>{b.icon}</span>
+                <span>{b.title}</span>
+              </span>
+            ))
+          )}
         </div>
 
         {/* Quick Stats Grid */}
@@ -174,11 +182,19 @@ const ProfilePage = () => {
           </div>
           <div className="p-3 rounded-xl bg-brand-surface border border-white/5 space-y-1">
             <span className="text-[9px] sm:text-[10px] text-brand-muted font-bold uppercase tracking-wider">Total Stars Earned</span>
-            <div className="text-lg sm:text-xl font-black text-amber-400">★ {totalStars}</div>
+            {loadingRepos ? (
+              <div className="h-5 w-16 bg-white/5 animate-pulse rounded mt-1" />
+            ) : (
+              <div className="text-lg sm:text-xl font-black text-amber-400">★ {totalStars}</div>
+            )}
           </div>
           <div className="p-3 rounded-xl bg-brand-surface border border-white/5 space-y-1">
             <span className="text-[9px] sm:text-[10px] text-brand-muted font-bold uppercase tracking-wider">Total Forks</span>
-            <div className="text-lg sm:text-xl font-black text-brand-accent">🍴 {totalForks}</div>
+            {loadingRepos ? (
+              <div className="h-5 w-16 bg-white/5 animate-pulse rounded mt-1" />
+            ) : (
+              <div className="text-lg sm:text-xl font-black text-brand-accent">🍴 {totalForks}</div>
+            )}
           </div>
           <div className="p-3 rounded-xl bg-brand-surface border border-white/5 space-y-1">
             <span className="text-[9px] sm:text-[10px] text-brand-muted font-bold uppercase tracking-wider">Followers</span>
@@ -211,25 +227,43 @@ const ProfilePage = () => {
 
         {/* Extremes Spotlight Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-          {mostPopularRepo && (
-            <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2">
-              <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">★ Most Popular Repository</span>
-              <h4 className="text-[11px] sm:text-xs font-bold text-white">{mostPopularRepo.fullName || mostPopularRepo.name}</h4>
-              <p className="text-[10px] text-brand-muted line-clamp-1">{mostPopularRepo.description || "No description."}</p>
-            </div>
-          )}
+          {loadingRepos ? (
+            <>
+              <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2 animate-pulse">
+                <div className="h-3.5 w-32 bg-white/5 rounded" />
+                <div className="h-4 w-48 bg-white/5 rounded" />
+                <div className="h-3 w-full bg-white/5 rounded animate-pulse" />
+              </div>
+              <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2 animate-pulse">
+                <div className="h-3.5 w-32 bg-white/5 rounded" />
+                <div className="h-4 w-48 bg-white/5 rounded" />
+                <div className="h-3 w-full bg-white/5 rounded animate-pulse" />
+              </div>
+            </>
+          ) : (
+            <>
+              {mostPopularRepo && (
+                <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2">
+                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">★ Most Popular Repository</span>
+                  <h4 className="text-[11px] sm:text-xs font-bold text-white">{mostPopularRepo.fullName || mostPopularRepo.name}</h4>
+                  <p className="text-[10px] text-brand-muted line-clamp-1">{mostPopularRepo.description || "No description."}</p>
+                </div>
+              )}
 
-          {largestRepo && (
-            <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2">
-              <span className="text-[9px] font-bold text-brand-accent uppercase tracking-widest">💾 Largest Codebase</span>
-              <h4 className="text-[11px] sm:text-xs font-bold text-white">{largestRepo.fullName || largestRepo.name}</h4>
-              <p className="text-[10px] text-brand-muted">{largestRepo.size || 0} KB code volume</p>
-            </div>
+              {largestRepo && (
+                <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2">
+                  <span className="text-[9px] font-bold text-brand-accent uppercase tracking-widest">💾 Largest Codebase</span>
+                  <h4 className="text-[11px] sm:text-xs font-bold text-white">{largestRepo.fullName || largestRepo.name}</h4>
+                  <p className="text-[10px] text-brand-muted">{largestRepo.size || 0} KB code volume</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
     </MainLayout>
   );
 };
+
 
 export default ProfilePage;

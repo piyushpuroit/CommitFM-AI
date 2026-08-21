@@ -6,7 +6,7 @@ import logoImg from "../assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useRepository();
+  const { user, userLoading, logout } = useRepository();
 
   const handleConnect = () => {
     setIsOpen(false);
@@ -39,7 +39,12 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className={`${isOpen ? "flex" : "hidden"} md:flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 w-full md:w-auto border-t md:border-t-0 border-white/5 pt-2.5 md:pt-0`}>
-            {user ? (
+            {userLoading ? (
+              <div className="flex items-center gap-1.5 justify-center py-1.5 px-3">
+                <div className="w-3 h-3 border border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-[10px] text-brand-muted font-bold">Checking session...</span>
+              </div>
+            ) : user ? (
               <>
                 <NavLink 
                   to="/dashboard" 
