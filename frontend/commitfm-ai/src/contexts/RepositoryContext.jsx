@@ -100,23 +100,34 @@ export function RepositoryProvider({ children }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    const params = new URLSearchParams(window.location.search);
+    const currentPath = window.location.pathname;
+    const currentQuery = window.location.search;
+    const params = new URLSearchParams(currentQuery);
+
+    console.log("[DIAGNOSTIC] CURRENT_PATH:", currentPath);
+    console.log("[DIAGNOSTIC] CURRENT_QUERY:", currentQuery);
+
     if (params.get("auth") === "success") {
-      console.log("[AUTH] OAUTH_SUCCESS_DETECTED");
+      console.log("[DIAGNOSTIC] OAUTH_SUCCESS_DETECTED", { path: currentPath, query: currentQuery });
     }
 
-    console.log("[AUTH] AUTH_ME_START");
+    console.log("[DIAGNOSTIC] AUTH_ME_START", { path: currentPath, query: currentQuery });
     fetch(`${getApiUrl()}/api/auth/me`, { credentials: "include" })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Unauthorized");
-      })
-      .then((data) => {
-        console.log("[AUTH] AUTH_ME_SUCCESS", data?.login);
-        setUser(data);
+      .then(async (res) => {
+        console.log("[DIAGNOSTIC] AUTH_ME_RESULT", { status: res.status, ok: res.ok });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: true, username: data?.login || "unknown" });
+          setUser(data);
+          return data;
+        } else {
+          console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: false, username: null });
+          setUser(null);
+        }
       })
       .catch((err) => {
-        console.log("[AUTH] AUTH_ME_FAILED", err.message);
+        console.error("[DIAGNOSTIC] AUTH_ME_FAILED", { message: err.message });
+        console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: false, username: null });
         setUser(null);
       })
       .finally(() => {

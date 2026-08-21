@@ -10,22 +10,28 @@ export const githubService = {
      */
     async getRepositories() {
         if (this._repositoriesCache) {
+            console.log("[DIAGNOSTIC] REPOSITORIES_CACHE_HIT", { count: this._repositoriesCache.length });
             return this._repositoriesCache;
         }
-        console.log("[REPO] REPOSITORIES_FETCH_START");
+        const currentPath = window.location.pathname;
+        const currentQuery = window.location.search;
+        console.log("[DIAGNOSTIC] REPOSITORIES_FETCH_START", { path: currentPath, query: currentQuery });
         try {
             const response = await fetch(`${getApiUrl()}/api/github/repositories`, {
                 credentials: "include"
             });
+            console.log("[DIAGNOSTIC] REPOSITORIES_FETCH_RESULT", { status: response.status, ok: response.ok });
             if (!response.ok) {
-                throw new Error(`Failed to fetch repositories: ${response.status} ${response.statusText}`);
+                const err = new Error(`Failed to fetch repositories: ${response.status} ${response.statusText}`);
+                err.status = response.status;
+                throw err;
             }
             const data = await response.json();
-            console.log("[REPO] REPOSITORIES_FETCH_SUCCESS", data.length);
+            console.log("[DIAGNOSTIC] REPOSITORIES_COUNT", { count: data.length });
             this._repositoriesCache = data.map(repo => new GitHubRepository(repo));
             return this._repositoriesCache;
         } catch (err) {
-            console.error("[REPO] REPOSITORIES_FETCH_FAILED", err);
+            console.error("[DIAGNOSTIC] REPOSITORIES_FETCH_ERROR", { message: err.message, status: err.status || "network_error" });
             throw err;
         }
     },
