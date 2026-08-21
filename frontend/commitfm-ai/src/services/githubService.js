@@ -1,4 +1,5 @@
 import { GitHubRepository } from "../models/GitHubRepository";
+import { getApiUrl } from "./apiClient";
 
 export const githubService = {
     _repositoriesCache: null,
@@ -11,15 +12,22 @@ export const githubService = {
         if (this._repositoriesCache) {
             return this._repositoriesCache;
         }
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/github/repositories`, {
-            credentials: "include"
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch repositories: ${response.statusText}`);
+        console.log("[REPO] REPOSITORIES_FETCH_START");
+        try {
+            const response = await fetch(`${getApiUrl()}/api/github/repositories`, {
+                credentials: "include"
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to fetch repositories: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            console.log("[REPO] REPOSITORIES_FETCH_SUCCESS", data.length);
+            this._repositoriesCache = data.map(repo => new GitHubRepository(repo));
+            return this._repositoriesCache;
+        } catch (err) {
+            console.error("[REPO] REPOSITORIES_FETCH_FAILED", err);
+            throw err;
         }
-        const data = await response.json();
-        this._repositoriesCache = data.map(repo => new GitHubRepository(repo));
-        return this._repositoriesCache;
     },
 
     /**
@@ -53,7 +61,7 @@ export const githubService = {
      * @returns {Promise<GitHubRepository>}
      */
     async getRepositoryDetailsByPath(owner, repo) {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/github/repositories/${owner}/${repo}`, {
+        const response = await fetch(`${getApiUrl()}/api/github/repositories/${owner}/${repo}`, {
             credentials: "include"
         });
         if (!response.ok) {
@@ -65,3 +73,4 @@ export const githubService = {
 };
 
 export default githubService;
+

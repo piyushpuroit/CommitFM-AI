@@ -19,31 +19,8 @@ export function RepositoryProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [user, setUser] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("auth") === "success") {
-      sessionStorage.removeItem("commitfm_user");
-      sessionStorage.removeItem("commitfm_auth_checked");
-      return null;
-    }
-    const cached = sessionStorage.getItem("commitfm_user");
-    if (cached) {
-      try {
-        return cached === "null" ? null : JSON.parse(cached);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const [userLoading, setUserLoading] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("auth") === "success") {
-      return true;
-    }
-    return sessionStorage.getItem("commitfm_auth_checked") !== "true";
-  });
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
 
   const abortControllerRef = useRef(null);
   const analysisCacheRef = useRef({});
@@ -123,33 +100,37 @@ export function RepositoryProvider({ children }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    // Clean up query parameters from the address bar without reload
     const params = new URLSearchParams(window.location.search);
-    if (params.has("auth")) {
-      params.delete("auth");
-      const newSearch = params.toString();
-      const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
-      window.history.replaceState({}, document.title, newUrl);
+    if (params.get("auth") === "success") {
+      console.log("[AUTH] OAUTH_SUCCESS_DETECTED");
     }
 
+    console.log("[AUTH] AUTH_ME_START");
     fetch(`${getApiUrl()}/api/auth/me`, { credentials: "include" })
       .then((res) => {
         if (res.ok) return res.json();
         throw new Error("Unauthorized");
       })
       .then((data) => {
+        console.log("[AUTH] AUTH_ME_SUCCESS", data?.login);
         setUser(data);
-        sessionStorage.setItem("commitfm_user", JSON.stringify(data));
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log("[AUTH] AUTH_ME_FAILED", err.message);
         setUser(null);
-        sessionStorage.setItem("commitfm_user", "null");
       })
       .finally(() => {
-        sessionStorage.setItem("commitfm_auth_checked", "true");
+        // Clean up query parameters from the address bar without reload
+        if (params.has("auth")) {
+          params.delete("auth");
+          const newSearch = params.toString();
+          const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
+          window.history.replaceState({}, document.title, newUrl);
+        }
         setUserLoading(false);
       });
   }, []);
+
 
 
   const logout = async () => {

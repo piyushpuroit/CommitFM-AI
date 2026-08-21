@@ -41,23 +41,23 @@ function AppRoutes() {
     }>
       <Routes>
         {/* Public Landing Page */}
-        <Route path="/" element={user ? <Navigate to="/repositories" /> : <HomePage />} />
-        <Route path="/connect" element={user ? <Navigate to="/repositories" /> : <Navigate to="/" />} />
+        <Route path="/" element={user ? <Navigate to="/repositories" replace /> : <HomePage />} />
+        <Route path="/connect" element={user ? <Navigate to="/repositories" replace /> : <Navigate to="/" replace />} />
         <Route path="/demo" element={<DemoDashboardPage />} />
 
         {/* Authenticated Routes */}
-        <Route path="/repositories" element={user ? <RepositoryExplorer /> : <Navigate to="/" />} />
-        <Route path="/repositories/:id" element={user ? <RepositoryDetails /> : <Navigate to="/" />} />
-        <Route path="/dashboard" element={user ? <DashboardPage /> : <Navigate to="/" />} />
-        <Route path="/dashboard/:owner/:repo" element={user ? <DashboardPage /> : <Navigate to="/" />} />
-        <Route path="/dna" element={user ? <DeveloperDNAPage /> : <Navigate to="/" />} />
-        <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" />} />
-        <Route path="/compare" element={user ? <ComparePage /> : <Navigate to="/" />} />
-        <Route path="/search" element={user ? <GlobalSearchPage /> : <Navigate to="/" />} />
-        <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/" />} />
+        <Route path="/repositories" element={user ? <RepositoryExplorer /> : <Navigate to="/" replace />} />
+        <Route path="/repositories/:id" element={user ? <RepositoryDetails /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard" element={user ? <DashboardPage /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard/:owner/:repo" element={user ? <DashboardPage /> : <Navigate to="/" replace />} />
+        <Route path="/dna" element={user ? <DeveloperDNAPage /> : <Navigate to="/" replace />} />
+        <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" replace />} />
+        <Route path="/compare" element={user ? <ComparePage /> : <Navigate to="/" replace />} />
+        <Route path="/search" element={user ? <GlobalSearchPage /> : <Navigate to="/" replace />} />
+        <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/" replace />} />
         
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
