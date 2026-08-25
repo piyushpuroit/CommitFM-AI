@@ -1,11 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { getApiUrl } from "../services/apiClient";
-
 import { githubService } from "../services/githubService";
 
 export const RepositoryContext = createContext(undefined);
 
 export function RepositoryProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  const [repositories, setRepositories] = useState([]);
+  const [repositoriesLoading, setRepositoriesLoading] = useState(false);
+  const [repositoriesError, setRepositoriesError] = useState(null);
+
   const [selectedRepository, setSelectedRepositoryState] = useState(() => {
     const saved = localStorage.getItem("selectedRepository");
     try {
@@ -19,25 +26,62 @@ export function RepositoryProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
-
   const abortControllerRef = useRef(null);
   const analysisCacheRef = useRef({});
-  const fetchedRef = useRef(false);
+  const initRef = useRef(false);
+  const reposInflightRef = useRef(null);
 
-  const setSelectedRepository = (repo) => {
+  const clearAuthError = useCallback(() => {
+    setAuthError(null);
+  }, []);
+
+  const login = useCallback(() => {
+    window.location.assign(`${getApiUrl()}/api/auth/github/login`);
+  }, []);
+
+  const setSelectedRepository = useCallback((repo) => {
     setSelectedRepositoryState(repo);
     if (repo) {
       localStorage.setItem("selectedRepository", JSON.stringify(repo));
     } else {
       localStorage.removeItem("selectedRepository");
     }
-  };
+  }, []);
 
-  const fetchAnalysis = async (owner, repoName) => {
+  const fetchRepositories = useCallback(async (force = false) => {
+    if (!force && repositories.length > 0) {
+      return repositories;
+    }
+    if (reposInflightRef.current) {
+      return reposInflightRef.current;
+    }
+
+    setRepositoriesLoading(true);
+    setRepositoriesError(null);
+
+    const promise = (async () => {
+      try {
+        const data = await githubService.getRepositories(force);
+        setRepositories(data);
+        setRepositoriesLoading(false);
+        return data;
+      } catch (err) {
+        console.error("fetchRepositories error:", err);
+        setRepositoriesError(err.message || "Failed to load repositories");
+        setRepositoriesLoading(false);
+        throw err;
+      } finally {
+        reposInflightRef.current = null;
+      }
+    })();
+
+    reposInflightRef.current = promise;
+    return promise;
+  }, [repositories]);
+
+  const fetchAnalysis = useCallback(async (owner, repoName) => {
     const cacheKey = `${owner}/${repoName}`.toLowerCase();
-    
+
     // Check cache
     if (analysisCacheRef.current[cacheKey]) {
       setAnalysisResult(analysisCacheRef.current[cacheKey]);
@@ -79,9 +123,9 @@ export function RepositoryProvider({ children }) {
         throw err;
       }
     }
-  };
+  }, []);
 
-  const switchRepository = async (repo) => {
+  const switchRepository = useCallback(async (repo) => {
     setSelectedRepository(repo);
     if (repo) {
       const owner = repo.owner?.login || repo.owner || repo.fullName?.split("/")[0];
@@ -94,72 +138,120 @@ export function RepositoryProvider({ children }) {
       setLoading(false);
       setError(null);
     }
-  };
+  }, [setSelectedRepository, fetchAnalysis]);
 
+  // Centralized Auth & Session Initialization
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (initRef.current) return;
+    initRef.current = true;
 
-    const currentPath = window.location.pathname;
     const currentQuery = window.location.search;
     const params = new URLSearchParams(currentQuery);
+    const authParam = params.get("auth");
 
-    console.log("[DIAGNOSTIC] CURRENT_PATH:", currentPath);
-    console.log("[DIAGNOSTIC] CURRENT_QUERY:", currentQuery);
+    console.log("[AUTH_INIT] Starting auth initialization. Query:", currentQuery);
 
-    if (params.get("auth") === "success") {
-      console.log("[DIAGNOSTIC] OAUTH_SUCCESS_DETECTED", { path: currentPath, query: currentQuery });
+    if (authParam === "failed") {
+      console.warn("[AUTH_INIT] OAuth returned auth=failed");
+      setAuthError("GitHub connection failed — Try again");
+      setUser(null);
+      setRepositories([]);
+      setAuthChecking(false);
+
+      // Clean up URL query parameter without full page reload
+      params.delete("auth");
+      const remainingSearch = params.toString();
+      const cleanUrl = window.location.pathname + (remainingSearch ? `?${remainingSearch}` : "");
+      window.history.replaceState({}, document.title, cleanUrl);
+      return;
     }
 
-    console.log("[DIAGNOSTIC] AUTH_ME_START", { path: currentPath, query: currentQuery });
+    // Call /api/auth/me to check active session
     fetch(`${getApiUrl()}/api/auth/me`, { credentials: "include" })
       .then(async (res) => {
-        console.log("[DIAGNOSTIC] AUTH_ME_RESULT", { status: res.status, ok: res.ok });
+        console.log("[AUTH_INIT] /api/auth/me response status:", res.status);
         if (res.ok) {
-          const data = await res.json();
-          console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: true, username: data?.login || "unknown" });
-          setUser(data);
-          return data;
+          const userData = await res.json();
+          console.log("[AUTH_INIT] Authenticated user:", userData?.login || "unknown");
+          setUser(userData);
+          setAuthError(null);
+
+          // Fetch repositories immediately with confirmed session
+          fetchRepositories(true).catch((err) => {
+            console.error("[AUTH_INIT] Initial repository load error:", err);
+          });
+          return userData;
         } else {
-          console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: false, username: null });
+          console.log("[AUTH_INIT] User not authenticated (status:", res.status, ")");
           setUser(null);
+          setRepositories([]);
+          if (authParam === "success") {
+            setAuthError("GitHub connection failed — Try again");
+          }
         }
       })
       .catch((err) => {
-        console.error("[DIAGNOSTIC] AUTH_ME_FAILED", { message: err.message });
-        console.log("[DIAGNOSTIC] AUTH_USER_STATE", { authenticated: false, username: null });
+        console.error("[AUTH_INIT] /api/auth/me failed:", err);
         setUser(null);
+        setRepositories([]);
+        if (authParam === "success") {
+          setAuthError("GitHub connection failed — Try again");
+        }
       })
       .finally(() => {
-        // Clean up query parameters from the address bar without reload
+        // Clean up ?auth= query parameter without reload
         if (params.has("auth")) {
           params.delete("auth");
-          const newSearch = params.toString();
-          const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
-          window.history.replaceState({}, document.title, newUrl);
+          const remainingSearch = params.toString();
+          const cleanUrl = window.location.pathname + (remainingSearch ? `?${remainingSearch}` : "");
+          window.history.replaceState({}, document.title, cleanUrl);
         }
-        setUserLoading(false);
+        setAuthChecking(false);
       });
-  }, []);
+  }, [fetchRepositories]);
 
-
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      await fetch(`${getApiUrl()}/api/auth/logout`, { method: "POST", credentials: "include" });
+      await fetch(`${getApiUrl()}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
       setUser(null);
+      setRepositories([]);
       setSelectedRepository(null);
       setAnalysisResult(null);
-      githubService._repositoriesCache = null;
+      setAuthError(null);
+      githubService.clearCache();
       analysisCacheRef.current = {};
       sessionStorage.removeItem("commitfm_user");
       sessionStorage.removeItem("commitfm_auth_checked");
-    } catch (err) {
-      console.error("Logout failed:", err);
     }
-  };
+  }, [setSelectedRepository]);
 
   const value = {
+    // Auth state
+    user,
+    setUser,
+    authChecking,
+    userLoading: authChecking, // backward compatibility
+    authenticated: Boolean(user),
+    unauthenticated: !authChecking && !user,
+    authError,
+    clearAuthError,
+    login,
+    logout,
+
+    // Repositories state
+    repositories,
+    setRepositories,
+    repositoriesLoading,
+    repositoriesError,
+    fetchRepositories,
+
+    // Active repository & analysis state
     selectedRepository,
     setSelectedRepository,
     analysisResult,
@@ -170,10 +262,12 @@ export function RepositoryProvider({ children }) {
     analysisError: error,
     fetchAnalysis,
     switchRepository,
-    user,
-    setUser,
-    userLoading,
-    logout
+
+    // Commits compatibility aliases
+    commits: analysisResult?.commits || [],
+    commitsLoading: loading,
+    commitsError: error,
+    commitsStatus: loading ? "loading" : error ? "error" : "success"
   };
 
   return (

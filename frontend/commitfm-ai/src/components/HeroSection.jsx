@@ -1,10 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useRepository } from "../contexts/RepositoryContext";
-import { getApiUrl } from "../services/apiClient";
 
 const HeroSection = () => {
-    const { user } = useRepository();
+    const { user, login } = useRepository();
     const navigate = useNavigate();
 
     const handleConnectGitHub = (e) => {
@@ -12,7 +11,7 @@ const HeroSection = () => {
         if (user) {
             navigate("/repositories");
         } else {
-            window.location.href = `${getApiUrl()}/api/auth/github/login`;
+            login();
         }
     };
 

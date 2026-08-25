@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import MainLayout from "../layouts/MainLayout";
-import { githubService } from "../services/githubService";
-
+import { useRepository } from "../contexts/RepositoryContext";
 import { getApiUrl } from "../services/apiClient";
 
 const ComparePage = () => {
-  const [repositories, setRepositories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, userLoading, repositories, repositoriesLoading, login } = useRepository();
   const [repoA, setRepoA] = useState(null);
   const [repoB, setRepoB] = useState(null);
 
@@ -16,24 +14,14 @@ const ComparePage = () => {
   const [loadingB, setLoadingB] = useState(false);
 
   useEffect(() => {
-    const loadRepos = async () => {
-      try {
-        const list = await githubService.getRepositories();
-        setRepositories(list);
-        if (list.length >= 2) {
-          setRepoA(list[0]);
-          setRepoB(list[1]);
-        } else if (list.length === 1) {
-          setRepoA(list[0]);
-        }
-      } catch (err) {
-        console.error("Failed to load repositories for comparison:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadRepos();
-  }, []);
+    if (repositories.length >= 2) {
+      if (!repoA) setRepoA(repositories[0]);
+      if (!repoB) setRepoB(repositories[1]);
+    } else if (repositories.length === 1) {
+      if (!repoA) setRepoA(repositories[0]);
+    }
+  }, [repositories, repoA, repoB]);
+
 
   useEffect(() => {
     if (!repoA) return;
@@ -63,12 +51,30 @@ const ComparePage = () => {
       .finally(() => setLoadingB(false));
   }, [repoB]);
 
-  if (loading) {
+  if (userLoading || (user && repositoriesLoading && repositories.length === 0)) {
     return (
       <MainLayout>
         <div className="flex flex-col items-center justify-center py-24 text-[10px] text-brand-muted font-semibold gap-3">
           <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
           Loading comparison engine...
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="max-w-md mx-auto text-center py-20 space-y-4">
+          <span className="text-3xl">🔐</span>
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">Authentication Required</h2>
+          <p className="text-xs text-brand-muted">Please sign in with GitHub to compare your repositories.</p>
+          <button
+            onClick={login}
+            className="inline-block bg-brand-primary text-white border border-brand-primary/20 px-4 py-2 rounded-sm text-xs font-bold transition hover:bg-brand-primary/95 cursor-pointer select-none"
+          >
+            Connect GitHub Account
+          </button>
         </div>
       </MainLayout>
     );

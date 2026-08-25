@@ -1,32 +1,46 @@
-import { useState, useCallback } from "react";
+import { useContext, useState, useCallback } from "react";
+import { RepositoryContext } from "../contexts/RepositoryContext";
 import { githubService } from "../services/githubService";
 
 /**
  * Custom React hook to fetch repositories and manage loading/error state.
+ * Uses centralized RepositoryContext when mounted inside RepositoryProvider.
  */
 export const useRepositories = () => {
-    const [repositories, setRepositories] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const context = useContext(RepositoryContext);
+    const [localRepos, setLocalRepos] = useState([]);
+    const [localLoading, setLocalLoading] = useState(false);
+    const [localError, setLocalError] = useState(null);
 
-    const fetchRepositories = useCallback(async () => {
-        setLoading(true);
-        setError(null);
+    const fallbackFetch = useCallback(async (force = false) => {
+        setLocalLoading(true);
+        setLocalError(null);
         try {
-            const data = await githubService.getRepositories();
-            setRepositories(data);
+            const data = await githubService.getRepositories(force);
+            setLocalRepos(data);
+            return data;
         } catch (err) {
-            setError(err.message || "Failed to load repositories");
+            setLocalError(err.message || "Failed to load repositories");
+            throw err;
         } finally {
-            setLoading(false);
+            setLocalLoading(false);
         }
     }, []);
 
+    if (context) {
+        return {
+            repositories: context.repositories,
+            loading: context.repositoriesLoading,
+            error: context.repositoriesError,
+            fetchRepositories: context.fetchRepositories
+        };
+    }
+
     return {
-        repositories,
-        loading,
-        error,
-        fetchRepositories
+        repositories: localRepos,
+        loading: localLoading,
+        error: localError,
+        fetchRepositories: fallbackFetch
     };
 };
 

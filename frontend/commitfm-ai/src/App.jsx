@@ -1,74 +1,36 @@
-import React, { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { RepositoryProvider, useRepository } from "./contexts/RepositoryContext";
+import { Routes, Route } from "react-router-dom";
+import { RepositoryProvider } from "./contexts/RepositoryContext";
 
 import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import DeveloperDNAPage from "./pages/DeveloperDNAPage";
+import RepositoryExplorer from "./pages/RepositoryExplorer";
+import RepositoryDetails from "./pages/RepositoryDetails";
 
-const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
-const DeveloperDNAPage = lazy(() => import("./pages/DeveloperDNAPage"));
-const RepositoryExplorer = lazy(() => import("./pages/RepositoryExplorer"));
-const RepositoryDetails = lazy(() => import("./pages/RepositoryDetails"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ComparePage = lazy(() => import("./pages/ComparePage"));
-const GlobalSearchPage = lazy(() => import("./pages/GlobalSearchPage"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const DemoDashboardPage = lazy(() => import("./pages/DemoDashboardPage"));
-
-function AppRoutes() {
-  const { user, userLoading } = useRepository();
-
-  const params = new URLSearchParams(window.location.search);
-  const isAuthCallback = params.get("auth") === "success";
-  const isPublicRoute = (window.location.pathname === "/" || window.location.pathname === "/demo") && !isAuthCallback;
-
-  if (userLoading && !isPublicRoute) {
-    return (
-      <div className="min-h-screen bg-brand-bg flex flex-col items-center justify-center text-xs text-brand-muted font-bold gap-3">
-        <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-        <span>Authenticating session...</span>
-      </div>
-    );
-  }
-
-
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-brand-bg flex flex-col items-center justify-center text-xs text-brand-muted font-bold gap-3">
-        <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-        <span>Loading...</span>
-      </div>
-    }>
-      <Routes>
-        {/* Public Landing Page */}
-        <Route path="/" element={user ? <Navigate to="/repositories" replace /> : <HomePage />} />
-        <Route path="/connect" element={user ? <Navigate to="/repositories" replace /> : <Navigate to="/" replace />} />
-        <Route path="/demo" element={<DemoDashboardPage />} />
-
-        {/* Authenticated Routes */}
-        <Route path="/repositories" element={user ? <RepositoryExplorer /> : <Navigate to="/" replace />} />
-        <Route path="/repositories/:id" element={user ? <RepositoryDetails /> : <Navigate to="/" replace />} />
-        <Route path="/dashboard" element={user ? <DashboardPage /> : <Navigate to="/" replace />} />
-        <Route path="/dashboard/:owner/:repo" element={user ? <DashboardPage /> : <Navigate to="/" replace />} />
-        <Route path="/dna" element={user ? <DeveloperDNAPage /> : <Navigate to="/" replace />} />
-        <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" replace />} />
-        <Route path="/compare" element={user ? <ComparePage /> : <Navigate to="/" replace />} />
-        <Route path="/search" element={user ? <GlobalSearchPage /> : <Navigate to="/" replace />} />
-        <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/" replace />} />
-        
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
-  );
-}
+import ProfilePage from "./pages/ProfilePage";
+import ComparePage from "./pages/ComparePage";
+import GlobalSearchPage from "./pages/GlobalSearchPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
     <RepositoryProvider>
-      <AppRoutes />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/:owner/:repo" element={<DashboardPage />} />
+        <Route path="/connect" element={<OnboardingPage />} />
+        <Route path="/dna" element={<DeveloperDNAPage />} />
+        <Route path="/repositories" element={<RepositoryExplorer />} />
+        <Route path="/repositories/:id" element={<RepositoryDetails />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/search" element={<GlobalSearchPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
     </RepositoryProvider>
   );
 }
 
-export default App;
+export default App;

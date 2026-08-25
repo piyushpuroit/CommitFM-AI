@@ -6,13 +6,12 @@ import RepoSelectionStep from "../components/onboarding/RepoSelectionStep";
 import AnalysisLoadingStep from "../components/onboarding/AnalysisLoadingStep";
 import AnalysisCompleteStep from "../components/onboarding/AnalysisCompleteStep";
 import { useRepository } from "../contexts/RepositoryContext";
-import { getApiUrl } from "../services/apiClient";
 
 const OnboardingPage = () => {
     const [step, setStep] = useState(1);
     const [selectedRepo, setSelectedRepo] = useState(null);
     const navigate = useNavigate();
-    const { user, setSelectedRepository } = useRepository();
+    const { user, setSelectedRepository, login } = useRepository();
 
     useEffect(() => {
         if (user && step === 1) {
@@ -21,7 +20,7 @@ const OnboardingPage = () => {
     }, [user, step]);
 
     const handleConnect = () => {
-        window.location.href = `${getApiUrl()}/api/auth/github/login`;
+        login();
     };
 
     const handleSelectRepo = (repo) => {

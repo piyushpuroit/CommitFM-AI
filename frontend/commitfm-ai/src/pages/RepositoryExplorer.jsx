@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { githubService } from "../services/githubService";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
@@ -15,40 +14,29 @@ const getLanguageColor = (lang) => {
 };
 
 const RepositoryExplorer = () => {
-    const { user, switchRepository } = useRepository();
-    const [repositories, setRepositories] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { 
+        user, 
+        authChecking, 
+        repositories, 
+        repositoriesLoading, 
+        repositoriesError, 
+        fetchRepositories, 
+        switchRepository, 
+        login 
+    } = useRepository();
+
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState("all");
     const [selectedType, setSelectedType] = useState("all");
     const [sortBy, setSortBy] = useState("stars");
 
-    const fetchRepos = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await githubService.getRepositories();
-            setRepositories(data);
-        } catch (err) {
-            console.error("Failed to load repositories:", err);
-            setError(err.message || "Failed to load repositories");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchRepos();
-    }, []);
-
     // Filter Logic
     const filteredRepositories = repositories.filter((repo) => {
-        const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             repo.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = repo.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             repo.description?.toLowerCase().includes(searchQuery.toLowerCase());
         
         // Find primary language (one with the most bytes)
-        const primaryLang = Object.keys(repo.languages)[0] || "";
+        const primaryLang = (repo.languages && Object.keys(repo.languages)[0]) || "";
         const matchesLang = selectedLanguage === "all" || primaryLang.toLowerCase() === selectedLanguage.toLowerCase();
         
         const matchesType = selectedType === "all" || 
@@ -60,18 +48,50 @@ const RepositoryExplorer = () => {
 
     // Sort Logic
     const sortedRepositories = [...filteredRepositories].sort((a, b) => {
-        if (sortBy === "stars") return b.starsCount - a.starsCount;
-        if (sortBy === "forks") return b.forksCount - a.forksCount;
-        if (sortBy === "name") return a.name.localeCompare(b.name);
+        if (sortBy === "stars") return (b.starsCount || 0) - (a.starsCount || 0);
+        if (sortBy === "forks") return (b.forksCount || 0) - (a.forksCount || 0);
+        if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
         return (b.lastSyncedAt ? new Date(b.lastSyncedAt) : 0) - (a.lastSyncedAt ? new Date(a.lastSyncedAt) : 0);
     });
 
-    // Collect all available unique primary languages from mock data
+    // Collect all available unique primary languages from repository data
     const availableLanguages = Array.from(
         new Set(
-            repositories.map(repo => Object.keys(repo.languages)[0]).filter(Boolean)
+            repositories.map(repo => (repo.languages && Object.keys(repo.languages)[0])).filter(Boolean)
         )
     );
+
+    if (authChecking) {
+        return (
+            <MainLayout>
+                <div className="space-y-6 text-left">
+                    <div className="p-4 rounded-premium bg-brand-surface border border-white/5 animate-pulse">
+                        <div className="h-5 w-48 bg-white/10 rounded mb-2" />
+                        <div className="h-3 w-72 bg-white/5 rounded" />
+                    </div>
+                    <LoadingSkeleton count={4} />
+                </div>
+            </MainLayout>
+        );
+    }
+
+    if (!user) {
+        return (
+            <MainLayout>
+                <div className="max-w-md mx-auto text-center py-20 space-y-4">
+                    <span className="text-3xl">🔐</span>
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider">Authentication Required</h2>
+                    <p className="text-xs text-brand-muted">Please connect your GitHub account to browse and analyze your repositories.</p>
+                    <button
+                        onClick={login}
+                        className="btn-premium-primary px-5 py-2.5 text-xs font-bold rounded-lg shadow-lg shadow-brand-primary/25 cursor-pointer select-none"
+                    >
+                        Connect GitHub Account
+                    </button>
+                </div>
+            </MainLayout>
+        );
+    }
 
     return (
         <MainLayout>
@@ -83,20 +103,18 @@ const RepositoryExplorer = () => {
                         <p className="text-xs text-brand-muted">Search and review available repositories for analysis</p>
                     </div>
 
-                    {user && (
-                        <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-2.5 rounded-premium self-start md:self-auto">
-                            {user.avatarUrl && (
-                                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full border border-brand-primary/20" />
-                            )}
-                            <div>
-                                <h3 className="text-xs font-bold text-white uppercase tracking-wider leading-none">{user.name}</h3>
-                                <p className="text-[10px] text-brand-muted leading-relaxed font-bold mt-1">@{user.login}</p>
-                                <span className="text-[9px] text-brand-primary font-black uppercase tracking-widest leading-none mt-1 block">
-                                    {user.publicRepos} Repositories Connected
-                                </span>
-                            </div>
+                    <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-2.5 rounded-premium self-start md:self-auto">
+                        {user.avatarUrl && (
+                            <img src={user.avatarUrl} alt={user.name || user.login} className="w-10 h-10 rounded-full border border-brand-primary/20" />
+                        )}
+                        <div>
+                            <h3 className="text-xs font-bold text-white uppercase tracking-wider leading-none">{user.name || user.login}</h3>
+                            <p className="text-[10px] text-brand-muted leading-relaxed font-bold mt-1">@{user.login}</p>
+                            <span className="text-[9px] text-brand-primary font-black uppercase tracking-widest leading-none mt-1 block">
+                                {repositories.length} Repositories Loaded
+                            </span>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Filter Bar */}
@@ -148,11 +166,24 @@ const RepositoryExplorer = () => {
                     </div>
                 </div>
 
+                {/* Optional Warning Banner if retry is available */}
+                {repositoriesError && repositories.length > 0 && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-premium flex items-center justify-between text-xs text-red-300">
+                        <span>⚠️ Sync issue: {repositoriesError}</span>
+                        <button
+                            onClick={() => fetchRepositories(true)}
+                            className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 rounded text-[11px] font-bold text-white transition cursor-pointer"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {/* Repository Cards List */}
-                {loading ? (
+                {repositoriesLoading && repositories.length === 0 ? (
                     <LoadingSkeleton count={4} />
-                ) : error ? (
-                    <ErrorState message={error} onRetry={fetchRepos} />
+                ) : repositoriesError && repositories.length === 0 ? (
+                    <ErrorState message={repositoriesError} onRetry={() => fetchRepositories(true)} />
                 ) : (
                     <motion.div
                         className="grid grid-cols-1 gap-3"
@@ -167,7 +198,7 @@ const RepositoryExplorer = () => {
                         }}
                     >
                         {sortedRepositories.map((repo) => {
-                            const primaryLang = Object.keys(repo.languages)[0] || "Unknown";
+                            const primaryLang = (repo.languages && Object.keys(repo.languages)[0]) || "Unknown";
                             const formattedDate = repo.lastSyncedAt 
                                 ? new Date(repo.lastSyncedAt).toLocaleDateString("en-US", {
                                       month: "short",
@@ -192,26 +223,30 @@ const RepositoryExplorer = () => {
                                                 onClick={() => switchRepository(repo)}
                                                 className="text-sm font-bold text-[#8B5CF6] hover:underline hover:text-brand-accent transition"
                                             >
-                                                {repo.fullName}
+                                                {repo.fullName || `${repo.owner?.login || repo.owner}/${repo.name}`}
                                             </Link>
-                                            <a
-                                                href={repo.htmlUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-zinc-500 hover:text-white transition"
-                                                title="View on GitHub"
-                                            >
-                                                <svg className="w-3.5 h-3.5 inline-block" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                                                </svg>
-                                            </a>
+                                            {repo.htmlUrl && (
+                                                <a
+                                                    href={repo.htmlUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-zinc-500 hover:text-white transition"
+                                                    title="View on GitHub"
+                                                >
+                                                    <svg className="w-3.5 h-3.5 inline-block" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                                    </svg>
+                                                </a>
+                                            )}
                                             <span className="px-1.5 py-0.2 rounded-full border border-white/10 text-[8px] font-bold text-brand-muted uppercase tracking-wider">
                                                 {repo.isPrivate ? "Private" : "Public"}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-brand-muted leading-relaxed">
-                                            {repo.description}
-                                        </p>
+                                        {repo.description && (
+                                            <p className="text-xs text-brand-muted leading-relaxed">
+                                                {repo.description}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* GitHub-Inspired Info Density Metadata */}
@@ -227,7 +262,7 @@ const RepositoryExplorer = () => {
                                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                             </svg>
-                                            <span>{repo.starsCount}</span>
+                                            <span>{repo.starsCount || 0}</span>
                                         </div>
 
                                         {/* Forks */}
@@ -238,7 +273,7 @@ const RepositoryExplorer = () => {
                                                 <circle cx="16" cy="19" r="2" fill="currentColor" />
                                                 <circle cx="6" cy="12" r="1" fill="currentColor" />
                                             </svg>
-                                            <span>{repo.forksCount}</span>
+                                            <span>{repo.forksCount || 0}</span>
                                         </div>
 
                                         {/* Updated Date */}

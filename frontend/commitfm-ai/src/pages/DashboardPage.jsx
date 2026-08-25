@@ -8,7 +8,6 @@ import WorkspaceModule from "../components/workspace/WorkspaceModule";
 import PremiumOnboarding from "../components/onboarding/PremiumOnboarding";
 import { githubService } from "../services/githubService";
 import { useRepository } from "../contexts/RepositoryContext";
-import { getApiUrl } from "../services/apiClient";
 
 const PremiumLoader = () => {
     const [progress, setProgress] = useState(10);
@@ -95,30 +94,17 @@ const DashboardPage = () => {
         setSelectedRepository, 
         user, 
         userLoading,
+        repositories,
         analysisResult,
         loading: analysisLoading,
         error: analysisError,
         fetchAnalysis,
-        switchRepository
+        switchRepository,
+        login
     } = useRepository();
 
-    const [repositories, setRepositories] = useState([]);
     const [activeModule, setActiveModule] = useState("overview");
     const [pageLoading, setPageLoading] = useState(true);
-
-    // 1. Initial auth and repository list load
-    useEffect(() => {
-        if (!user) return;
-        const loadRepos = async () => {
-            try {
-                const data = await githubService.getRepositories();
-                setRepositories(data);
-            } catch (err) {
-                console.error("Failed to load repositories:", err);
-            }
-        };
-        loadRepos();
-    }, [user]);
 
     // 2. Redirect logic and loading of repository from URL params
     useEffect(() => {
@@ -181,7 +167,7 @@ const DashboardPage = () => {
     };
 
     const handleConnectGithub = () => {
-        window.location.href = `${getApiUrl()}/api/auth/github/login`;
+        login();
     };
 
     if (userLoading) {

@@ -1,29 +1,9 @@
-import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MainLayout from "../layouts/MainLayout";
 import { useRepository } from "../contexts/RepositoryContext";
-import { githubService } from "../services/githubService";
-import { getApiUrl } from "../services/apiClient";
 
 const ProfilePage = () => {
-  const { user, userLoading } = useRepository();
-  const [repositories, setRepositories] = useState([]);
-  const [loadingRepos, setLoadingRepos] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const loadData = async () => {
-      try {
-        const repos = await githubService.getRepositories();
-        setRepositories(repos);
-      } catch (err) {
-        console.error("Failed to load user repositories:", err);
-      } finally {
-        setLoadingRepos(false);
-      }
-    };
-    loadData();
-  }, [user]);
+  const { user, userLoading, repositories, repositoriesLoading, login } = useRepository();
 
   if (userLoading) {
     return (
@@ -43,12 +23,12 @@ const ProfilePage = () => {
           <span className="text-3xl">🔐</span>
           <h2 className="text-sm font-bold text-white uppercase tracking-wider">Authentication Required</h2>
           <p className="text-xs text-brand-muted">Please sign in with GitHub to view your portfolio.</p>
-          <a
-            href={`${getApiUrl()}/api/auth/github/login`}
-            className="inline-block bg-brand-primary text-white border border-brand-primary/20 px-4 py-2 rounded-sm text-xs font-bold transition hover:bg-brand-primary/95"
+          <button
+            onClick={login}
+            className="inline-block bg-brand-primary text-white border border-brand-primary/20 px-4 py-2 rounded-sm text-xs font-bold transition hover:bg-brand-primary/95 cursor-pointer select-none"
           >
             Connect GitHub Account
-          </a>
+          </button>
         </div>
       </MainLayout>
     );
@@ -158,7 +138,7 @@ const ProfilePage = () => {
         {/* Badges Ribbon */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 -mt-1">
           <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider shrink-0">Achievements:</span>
-          {loadingRepos ? (
+          {repositoriesLoading ? (
             <>
               <div className="h-5 w-20 bg-white/5 animate-pulse rounded-full shrink-0" />
               <div className="h-5 w-24 bg-white/5 animate-pulse rounded-full shrink-0" />
@@ -182,7 +162,7 @@ const ProfilePage = () => {
           </div>
           <div className="p-3 rounded-xl bg-brand-surface border border-white/5 space-y-1">
             <span className="text-[9px] sm:text-[10px] text-brand-muted font-bold uppercase tracking-wider">Total Stars Earned</span>
-            {loadingRepos ? (
+            {repositoriesLoading ? (
               <div className="h-5 w-16 bg-white/5 animate-pulse rounded mt-1" />
             ) : (
               <div className="text-lg sm:text-xl font-black text-amber-400">★ {totalStars}</div>
@@ -190,7 +170,7 @@ const ProfilePage = () => {
           </div>
           <div className="p-3 rounded-xl bg-brand-surface border border-white/5 space-y-1">
             <span className="text-[9px] sm:text-[10px] text-brand-muted font-bold uppercase tracking-wider">Total Forks</span>
-            {loadingRepos ? (
+            {repositoriesLoading ? (
               <div className="h-5 w-16 bg-white/5 animate-pulse rounded mt-1" />
             ) : (
               <div className="text-lg sm:text-xl font-black text-brand-accent">🍴 {totalForks}</div>
@@ -227,7 +207,7 @@ const ProfilePage = () => {
 
         {/* Extremes Spotlight Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-          {loadingRepos ? (
+          {repositoriesLoading ? (
             <>
               <div className="p-3 sm:p-4 rounded-xl bg-brand-surface border border-white/5 space-y-2 animate-pulse">
                 <div className="h-3.5 w-32 bg-white/5 rounded" />

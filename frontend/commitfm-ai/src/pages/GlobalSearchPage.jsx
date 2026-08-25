@@ -1,20 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { githubService } from "../services/githubService";
 import { useRepository } from "../contexts/RepositoryContext";
 
 const GlobalSearchPage = () => {
-  const { analysisResults } = useRepository();
-  const [repositories, setRepositories] = useState([]);
+  const { analysisResults, repositories } = useRepository();
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'repos' | 'commits' | 'files' | 'prs'
-
-  useEffect(() => {
-    githubService.getRepositories()
-      .then(setRepositories)
-      .catch(console.error);
-  }, []);
 
   const queryLower = query.toLowerCase().trim();
 

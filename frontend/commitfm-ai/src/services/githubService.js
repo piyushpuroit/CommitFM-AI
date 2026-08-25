@@ -6,16 +6,17 @@ export const githubService = {
 
     /**
      * Retrieves all repositories from backend.
+     * @param {boolean} force - Force cache refresh if true.
      * @returns {Promise<GitHubRepository[]>}
      */
-    async getRepositories() {
-        if (this._repositoriesCache) {
+    async getRepositories(force = false) {
+        if (!force && this._repositoriesCache) {
             console.log("[DIAGNOSTIC] REPOSITORIES_CACHE_HIT", { count: this._repositoriesCache.length });
             return this._repositoriesCache;
         }
         const currentPath = window.location.pathname;
         const currentQuery = window.location.search;
-        console.log("[DIAGNOSTIC] REPOSITORIES_FETCH_START", { path: currentPath, query: currentQuery });
+        console.log("[DIAGNOSTIC] REPOSITORIES_FETCH_START", { path: currentPath, query: currentQuery, force });
         try {
             const response = await fetch(`${getApiUrl()}/api/github/repositories`, {
                 credentials: "include"
@@ -34,6 +35,10 @@ export const githubService = {
             console.error("[DIAGNOSTIC] REPOSITORIES_FETCH_ERROR", { message: err.message, status: err.status || "network_error" });
             throw err;
         }
+    },
+
+    clearCache() {
+        this._repositoriesCache = null;
     },
 
     /**

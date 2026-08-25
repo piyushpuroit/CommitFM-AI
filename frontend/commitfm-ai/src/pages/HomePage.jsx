@@ -4,8 +4,11 @@ import AnalyticsPreview from "../components/AnalyticsPreview";
 import FeatureGrid from "../components/FeatureGrid";
 import WorkflowSection from "../components/WorkflowSection";
 import CTASection from "../components/CTASection";
+import { useRepository } from "../contexts/RepositoryContext";
 
 const HomePage = () => {
+    const { authError, clearAuthError, login } = useRepository();
+
     return (
         <MainLayout>
             {/* Header with branding */}
@@ -17,6 +20,34 @@ const HomePage = () => {
                     <p className="text-xs text-brand-muted font-medium">The AI Developer Intelligence Platform</p>
                 </div>
             </header>
+
+            {/* Dismissable Auth Failure Banner */}
+            {authError && (
+                <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 rounded-premium flex items-center justify-between gap-3 text-left">
+                    <div className="flex items-center gap-2.5">
+                        <span className="text-base">⚠️</span>
+                        <div>
+                            <p className="text-xs font-bold text-red-400">{authError}</p>
+                            <p className="text-[10px] text-zinc-400">Please try connecting again.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={login}
+                            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-white rounded text-[11px] font-bold transition cursor-pointer"
+                        >
+                            Try Again
+                        </button>
+                        <button
+                            onClick={clearAuthError}
+                            className="p-1 text-zinc-400 hover:text-white transition cursor-pointer text-xs"
+                            title="Dismiss"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <HeroSection />
             <AnalyticsPreview />

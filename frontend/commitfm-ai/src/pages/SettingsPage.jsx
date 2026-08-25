@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { useRepository } from "../contexts/RepositoryContext";
-import { getApiUrl } from "../services/apiClient";
 
 const SettingsPage = () => {
-  const { user, logout } = useRepository();
+  const { user, logout, login } = useRepository();
   const [cacheCleared, setCacheCleared] = useState(false);
 
   const handleClearCache = () => {
@@ -14,7 +13,7 @@ const SettingsPage = () => {
   };
 
   const handleReconnect = () => {
-    window.location.href = `${getApiUrl()}/api/auth/github/login`;
+    login();
   };
 
   return (
